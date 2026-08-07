@@ -1,0 +1,46 @@
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+
+class BulletFeedback(BaseModel):
+    original: str
+    issue: str
+    rewrite: str
+
+
+class SectionScore(BaseModel):
+    name: str  # e.g. "Impact & Metrics", "Formatting", "Keyword Match"
+    score: int  # 0-100
+    note: str
+
+
+class AnalysisResult(BaseModel):
+    overall_score: int = Field(..., description="0-100 overall resume quality score")
+    ats_score: int = Field(..., description="0-100 estimated ATS parseability score")
+    summary: str = Field(..., description="2-3 sentence overall verdict")
+
+    section_scores: List[SectionScore]
+
+    strengths: List[str]
+    weaknesses: List[str]
+
+    missing_keywords: List[str] = Field(
+        default_factory=list,
+        description="Important keywords/skills missing, relative to job description if provided",
+    )
+
+    weak_bullets: List[BulletFeedback] = Field(
+        default_factory=list,
+        description="Specific weak bullet points with a suggested rewrite",
+    )
+
+    formatting_issues: List[str] = Field(default_factory=list)
+
+    job_match_score: Optional[int] = Field(
+        None, description="0-100 match score against a provided job description"
+    )
+
+
+class AnalyzeResponse(BaseModel):
+    filename: str
+    analysis: AnalysisResult

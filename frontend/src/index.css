@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+@layer utilities {
+  .redline-underline {
+    text-decoration: underline wavy #c81e3a;
+    text-underline-offset: 3px;
+  }
+}
