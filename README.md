@@ -2,11 +2,11 @@
 
 Upload a resume, get an ATS-compatibility score, section-by-section scorecard, red-pen
 rewrites of your weakest bullet points, and a keyword-gap analysis against a target job
-description — all powered by Claude.
+description.
 
 ## Stack
 
-- **Backend**: FastAPI (Python) — PDF/DOCX parsing, Claude API call, structured JSON output
+- **Backend**: FastAPI (Python) — PDF/DOCX parsing, Chatgpt API call, structured JSON output
 - **Frontend**: React + Vite + Tailwind — "editorial markup" design
 
 ## Quick start
@@ -20,7 +20,7 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edit .env and add your ANTHROPIC_API_KEY (https://console.anthropic.com/)
+# edit .env and add your Chatgpt API (https://console.chatgpt.com/)
 
 uvicorn main:app --reload --port 8000
 ```
@@ -53,10 +53,10 @@ Upload a PDF/DOCX/TXT resume, optionally paste a job description, hit "Analyze r
 1. **Parse**: `backend/app/parser.py` extracts raw text from PDF (pdfplumber) or DOCX
    (python-docx), including table cells (a lot of resumes use table layouts).
 2. **Prompt**: `backend/app/prompts.py` has a carefully constrained system prompt that
-   forces Claude to return structured JSON: overall score, ATS score, section scores,
+   forces Chatgpt to return structured JSON: overall score, ATS score, section scores,
    strengths/weaknesses, missing keywords, and specific bullet-point rewrites.
 3. **Validate**: `backend/app/schemas.py` uses Pydantic to validate the LLM's JSON output
-   before it ever reaches the frontend — if Claude returns malformed data, the API fails
+   before it ever reaches the frontend — if chatgpt returns malformed data, the API fails
    loudly instead of silently passing garbage to the UI.
 4. **Render**: The frontend renders results as if a recruiter marked up your resume with
    a red pen — strikethroughs on weak bullets, margin notes on what's wrong, a rewrite
@@ -110,7 +110,7 @@ resume-analyzer/
 ├── backend/
 │   ├── app/
 │   │   ├── parser.py       # PDF/DOCX/TXT → raw text
-│   │   ├── analyzer.py     # Claude API call + JSON parsing
+│   │   ├── analyzer.py     # chatgpt API call + JSON parsing
 │   │   ├── prompts.py      # System prompt, schema instructions
 │   │   └── schemas.py      # Pydantic response models
 │   ├── main.py              # FastAPI app + /analyze endpoint
