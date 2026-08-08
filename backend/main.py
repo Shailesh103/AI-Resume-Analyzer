@@ -17,7 +17,11 @@ app = FastAPI(
     version="1.0.0",
 )
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+# origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+origins = [
+    "https://ai-resume-analyzer-nu-taupe.vercel.app",
+    "http://localhost:5173",
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
