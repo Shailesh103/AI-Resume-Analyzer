@@ -2,7 +2,7 @@
 
 Upload a resume, get an ATS-compatibility score, section-by-section scorecard, red-pen
 rewrites of your weakest bullet points, and a keyword-gap analysis against a target job
-description — all powered by Claude.
+description — all powered by Chatgpt.
 
 ## Stack
 
