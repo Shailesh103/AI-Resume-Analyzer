@@ -4,6 +4,10 @@ Upload a resume, get an ATS-compatibility score, section-by-section scorecard, r
 rewrites of your weakest bullet points, and a keyword-gap analysis against a target job
 description.
 
+## 🚀 Live Demo
+
+👉 [AI Resume Analyzer](https://ai-resume-analyzer-nu-taupe.vercel.app/)
+
 ## Stack
 
 - **Backend**: FastAPI (Python) — PDF/DOCX parsing, Chatgpt API call, structured JSON output
