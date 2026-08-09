@@ -44,3 +44,48 @@ class AnalysisResult(BaseModel):
 class AnalyzeResponse(BaseModel):
     filename: str
     analysis: AnalysisResult
+
+
+# --- Auth & history schemas ---
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserOut(BaseModel):
+    id: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+class HistoryItem(BaseModel):
+    id: str
+    filename: str
+    overall_score: int
+    ats_score: int
+    job_match_score: Optional[int] = None
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class HistoryDetail(BaseModel):
+    id: str
+    filename: str
+    created_at: str
+    analysis: AnalysisResult
