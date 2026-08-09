@@ -28,6 +28,34 @@ function BulletMarkup({ bullet }) {
   )
 }
 
+function ATSEngineCard({ engine, score, issues, note }) {
+  const barColor = score >= 75 ? 'bg-slate' : score >= 50 ? 'bg-gold' : 'bg-redline'
+  const textColor = score >= 75 ? 'text-slate' : score >= 50 ? 'text-gold' : 'text-redline'
+
+  return (
+    <div className="border border-line bg-white/40 rounded-sm p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-ink">{engine}</span>
+        <span className={`font-mono text-sm font-semibold ${textColor}`}>{score}</span>
+      </div>
+      <div className="h-1.5 bg-line/60 rounded-full overflow-hidden mb-2">
+        <div className={`h-full ${barColor}`} style={{ width: `${score}%` }} />
+      </div>
+      <p className="text-xs text-slate mb-1.5">{note}</p>
+      {issues?.length > 0 && (
+        <ul className="space-y-1">
+          {issues.map((issue, i) => (
+            <li key={i} className="text-xs text-ink flex gap-1.5">
+              <span className="text-redline">•</span>
+              <span>{issue}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export default function ResultsDashboard({ data, onReset }) {
   const { analysis, filename } = data
 
@@ -71,6 +99,30 @@ export default function ResultsDashboard({ data, onReset }) {
           <SectionBar key={i} name={s.name} score={s.score} note={s.note} />
         ))}
       </div>
+
+      {/* ATS engine breakdown — how this resume parses on each real platform */}
+      {analysis.ats_engine_breakdown?.length > 0 && (
+        <div className="mb-10">
+          <h3 className="font-display text-lg text-ink mb-1 border-b border-line pb-2">
+            ATS engine breakdown
+          </h3>
+          <p className="text-xs text-slate mb-4">
+            How this resume is likely to parse on each platform, based on known formatting
+            behavior of each system.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {analysis.ats_engine_breakdown.map((e, i) => (
+              <ATSEngineCard
+                key={i}
+                engine={e.engine}
+                score={e.score}
+                issues={e.issues}
+                note={e.note}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Strengths / weaknesses */}
       <div className="grid md:grid-cols-2 gap-8 mb-10">

@@ -14,6 +14,13 @@ class SectionScore(BaseModel):
     note: str
 
 
+class ATSEngineScore(BaseModel):
+    engine: str  # e.g. "Workday", "Greenhouse", "Lever", "iCIMS", "Taleo"
+    score: int  # 0-100
+    issues: List[str] = Field(default_factory=list)
+    note: str
+
+
 class AnalysisResult(BaseModel):
     overall_score: int = Field(..., description="0-100 overall resume quality score")
     ats_score: int = Field(..., description="0-100 estimated ATS parseability score")
@@ -35,6 +42,11 @@ class AnalysisResult(BaseModel):
     )
 
     formatting_issues: List[str] = Field(default_factory=list)
+
+    ats_engine_breakdown: List[ATSEngineScore] = Field(
+        default_factory=list,
+        description="Per-ATS-platform parseability breakdown (Workday, Greenhouse, Lever, etc)",
+    )
 
     job_match_score: Optional[int] = Field(
         None, description="0-100 match score against a provided job description"
