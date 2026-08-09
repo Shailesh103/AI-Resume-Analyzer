@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
@@ -23,6 +23,7 @@ from app.auth import (
 from app.database import get_db, init_db
 from app.models_db import Analysis, User
 from app.parser import extract_text
+from app.rate_limit import check_rate_limit, get_usage_status, log_usage
 from app.schemas import (
     AnalyzeResponse,
     HistoryDetail,
@@ -105,11 +106,17 @@ def me(current_user: User = Depends(get_current_user)):
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(
+    request: Request,
     resume: UploadFile = File(...),
     job_description: str | None = Form(default=None),
     current_user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
+    user_id = current_user.id if current_user else None
+
+    # Check the quota BEFORE spending money on the OpenAI call.
+    check_rate_limit(db, request, user_id)
+
     file_bytes = await resume.read()
 
     size_mb = len(file_bytes) / (1024 * 1024)
@@ -120,6 +127,9 @@ async def analyze(
 
     resume_text = extract_text(resume.filename, file_bytes)
     result = await analyze_resume(resume_text, job_description)
+
+    # Only count it against the quota once we know the analysis actually succeeded.
+    log_usage(db, request, user_id)
 
     if current_user is not None:
         record = Analysis(
@@ -134,6 +144,17 @@ async def analyze(
         db.commit()
 
     return AnalyzeResponse(filename=resume.filename, analysis=result)
+
+
+@app.get("/usage")
+def usage(
+    request: Request,
+    current_user: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
+    """Lets the frontend show 'X scans left today' before the user even uploads."""
+    user_id = current_user.id if current_user else None
+    return get_usage_status(db, request, user_id)
 
 
 # ---------------------------------------------------------------------------

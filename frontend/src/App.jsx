@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import UploadForm from './components/UploadForm'
 import ResultsDashboard from './components/ResultsDashboard'
@@ -52,11 +52,48 @@ function Header({ view, setView }) {
   )
 }
 
+function UsageIndicator({ usage }) {
+  if (!usage) return null
+
+  const isLow = usage.remaining <= 1
+  const isZero = usage.remaining === 0
+
+  return (
+    <p
+      className={`text-xs text-center mt-4 ${
+        isZero ? 'text-redline' : isLow ? 'text-gold' : 'text-slate'
+      }`}
+    >
+      {isZero
+        ? "You've used all your scans for today."
+        : `${usage.remaining} scan${usage.remaining === 1 ? '' : 's'} left today`}
+      {' · '}
+      {usage.limit} per day{usage.used > 0 ? ` (${usage.used} used)` : ''}
+    </p>
+  )
+}
+
 function MainContent({ view, setView }) {
   const { token } = useAuth()
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [usage, setUsage] = useState(null)
+
+  const refreshUsage = useCallback(async () => {
+    try {
+      const headers = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+      const res = await fetch(`${API_URL}/usage`, { headers })
+      if (res.ok) setUsage(await res.json())
+    } catch {
+      // Non-critical — the analyze call will still enforce the real limit server-side.
+    }
+  }, [token])
+
+  useEffect(() => {
+    refreshUsage()
+  }, [refreshUsage])
 
   async function handleAnalyze(file, jobDescription) {
     setLoading(true)
@@ -85,6 +122,7 @@ function MainContent({ view, setView }) {
 
       const data = await res.json()
       setResult(data)
+      refreshUsage()
     } catch (e) {
       setError(e.message || 'Something went wrong. Please try again.')
     } finally {
@@ -124,6 +162,7 @@ function MainContent({ view, setView }) {
         )}
       </div>
       <UploadForm onAnalyze={handleAnalyze} loading={loading} error={error} />
+      <UsageIndicator usage={usage} />
     </>
   )
 }

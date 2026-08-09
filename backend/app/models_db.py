@@ -35,3 +35,16 @@ class Analysis(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     owner = relationship("User", back_populates="analyses")
+
+
+class UsageLog(Base):
+    """One row per successful /analyze call — used to enforce daily rate limits.
+
+    identifier is either a user's id (for logged-in users) or "ip:<address>"
+    (for guests), so both can be counted the same way.
+    """
+    __tablename__ = "usage_logs"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    identifier = Column(String, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
