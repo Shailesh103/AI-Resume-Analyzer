@@ -46,8 +46,8 @@ function ATSEngineCard({ engine, score, issues, note }) {
         <ul className="space-y-1">
           {issues.map((issue, i) => (
             <li key={i} className="text-xs text-ink flex gap-1.5">
-              <span className="text-redline">•</span>
-              <span>{issue}</span>
+              <span className="text-redline shrink-0">•</span>
+              <span className="min-w-0 break-words">{issue}</span>
             </li>
           ))}
         </ul>
@@ -76,10 +76,10 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
 
       {/* Score stamps */}
       <div className="flex flex-wrap gap-8 justify-center bg-white/50 border border-line rounded-sm py-8 mb-8">
-        <ScoreStamp label="Overall" score={analysis.overall_score} size="lg" />
-        <ScoreStamp label="ATS Compatibility" score={analysis.ats_score} size="lg" />
+        <ScoreStamp label="Overall" score={analysis.overall_score} size="lg" delayMs={0} />
+        <ScoreStamp label="ATS Compatibility" score={analysis.ats_score} size="lg" delayMs={90} />
         {analysis.job_match_score !== null && analysis.job_match_score !== undefined && (
-          <ScoreStamp label="Job Match" score={analysis.job_match_score} size="lg" />
+          <ScoreStamp label="Job Match" score={analysis.job_match_score} size="lg" delayMs={180} />
         )}
       </div>
 
@@ -143,8 +143,8 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
           <ul className="space-y-2">
             {analysis.strengths.map((s, i) => (
               <li key={i} className="text-sm text-ink flex gap-2">
-                <span className="text-slate">+</span>
-                <span>{s}</span>
+                <span className="text-slate shrink-0">+</span>
+                <span className="min-w-0 break-words">{s}</span>
               </li>
             ))}
           </ul>
@@ -156,8 +156,8 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
           <ul className="space-y-2">
             {analysis.weaknesses.map((w, i) => (
               <li key={i} className="text-sm text-ink flex gap-2">
-                <span className="text-redline">−</span>
-                <span>{w}</span>
+                <span className="text-redline shrink-0">−</span>
+                <span className="min-w-0 break-words">{w}</span>
               </li>
             ))}
           </ul>
@@ -205,8 +205,8 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
           <ul className="space-y-2">
             {analysis.formatting_issues.map((f, i) => (
               <li key={i} className="text-sm text-ink flex gap-2">
-                <span className="text-gold">⚑</span>
-                <span>{f}</span>
+                <span className="text-gold shrink-0">⚑</span>
+                <span className="min-w-0 break-words">{f}</span>
               </li>
             ))}
           </ul>

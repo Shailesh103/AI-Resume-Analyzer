@@ -6,34 +6,62 @@ import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
 import ResumeEditor from './components/ResumeEditor'
 
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+function NavLink({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-xs uppercase tracking-widest pb-0.5 border-b-2 transition-colors ${
+        active
+          ? 'text-redline border-redline'
+          : 'text-slate border-transparent hover:text-redline hover:border-redline/40'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
 
 function Header({ view, setView }) {
   const { user, logout, loading } = useAuth()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 4)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <header className="border-b border-line py-6 mb-12">
-      <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
-        <button onClick={() => setView('analyze')} className="font-display text-2xl text-ink">
+    <header
+      className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-12
+        transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(20,21,26,0.15)]' : 'border-transparent'}`}
+    >
+      <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-4">
+        <button onClick={() => setView('analyze')} className="font-display text-2xl text-ink shrink-0">
           Redline<span className="text-redline">.</span>
         </button>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto">
           {!loading && user && (
             <>
-              <button
-                onClick={() => setView('history')}
-                className="text-xs uppercase tracking-widest text-slate hover:text-redline"
-              >
+           
+              <NavLink active={view === 'history'} onClick={() => setView('history')}>
                 History
-              </button>
-              <span className="text-xs text-slate">{user.email}</span>
+              </NavLink>
+              <span className="hidden sm:inline text-xs text-slate truncate max-w-[160px]">
+                {user.email}
+              </span>
               <button
                 onClick={() => {
                   logout()
                   setView('analyze')
                 }}
-                className="text-xs uppercase tracking-widest text-slate hover:text-redline"
+                className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0"
               >
                 Sign out
               </button>
@@ -139,6 +167,8 @@ function MainContent({ view, setView }) {
   if (view === 'history') {
     return <HistoryList onBack={() => setView('analyze')} />
   }
+
+ 
 
   if (result && editing) {
     return (

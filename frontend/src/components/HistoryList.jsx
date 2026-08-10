@@ -91,7 +91,10 @@ export default function HistoryList({ onBack }) {
       {error && <p className="text-sm text-redline">{error}</p>}
 
       {items === null && !error && (
-        <p className="text-sm text-slate">Loading…</p>
+        <p className="text-sm text-slate flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-line border-t-slate animate-spin" />
+          Loading your history…
+        </p>
       )}
 
       {items?.length === 0 && (
@@ -105,16 +108,16 @@ export default function HistoryList({ onBack }) {
           <div
             key={item.id}
             onClick={() => openItem(item.id)}
-            className="flex items-center justify-between border border-line bg-white/40
+            className="flex items-center justify-between gap-4 border border-line bg-white/40
               rounded-sm px-4 py-3 cursor-pointer hover:border-redline/50 transition-colors"
           >
-            <div>
-              <p className="text-sm font-medium text-ink">{item.filename}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink truncate">{item.filename}</p>
               <p className="text-xs text-slate mt-0.5">
                 {new Date(item.created_at).toLocaleString()}
               </p>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 shrink-0">
               <div className="text-right">
                 <p className={`font-mono text-sm font-medium ${scoreColor(item.overall_score)}`}>
                   {item.overall_score}
@@ -139,7 +142,12 @@ export default function HistoryList({ onBack }) {
         ))}
       </div>
 
-      {detailLoading && <p className="text-sm text-slate mt-4">Loading analysis…</p>}
+      {detailLoading && (
+        <p className="text-sm text-slate mt-4 flex items-center gap-2">
+          <span className="w-3.5 h-3.5 rounded-full border-2 border-line border-t-slate animate-spin" />
+          Loading analysis…
+        </p>
+      )}
     </div>
   )
 }

@@ -4,7 +4,7 @@ function colorFor(score) {
   return { ring: '#C81E3A', text: '#C81E3A' } // redline = weak
 }
 
-export default function ScoreStamp({ label, score, size = 'lg' }) {
+export default function ScoreStamp({ label, score, size = 'lg', delayMs = 0 }) {
   const { ring, text } = colorFor(score)
   const dims = size === 'lg' ? 'w-32 h-32' : 'w-20 h-20'
   const fontSize = size === 'lg' ? 'text-4xl' : 'text-2xl'
@@ -13,8 +13,8 @@ export default function ScoreStamp({ label, score, size = 'lg' }) {
     <div className="flex flex-col items-center">
       <div
         className={`${dims} rounded-full border-[3px] flex items-center justify-center
-          -rotate-6 relative`}
-        style={{ borderColor: ring, color: text }}
+          relative animate-stamp-in`}
+        style={{ borderColor: ring, color: text, animationDelay: `${delayMs}ms` }}
       >
         <span className={`font-display font-semibold ${fontSize}`}>{score}</span>
       </div>

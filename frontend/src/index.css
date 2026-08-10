@@ -6,9 +6,89 @@ body {
   font-family: "IBM Plex Sans", sans-serif;
 }
 
+/* Visible keyboard focus everywhere, styled to match the red-pen theme */
+:focus-visible {
+  outline: 2px solid #c81e3a;
+  outline-offset: 2px;
+}
+
+/* Selection color matches the theme instead of the browser default blue */
+::selection {
+  background: rgba(200, 30, 58, 0.18);
+  color: #14151a;
+}
+
+/* Slim, quiet scrollbar (webkit) — the paper theme shouldn't fight a fat default bar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #dad7ce;
+  border-radius: 999px;
+  border: 2px solid #f6f5f1;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b4a8;
+}
+
+/* Buttons/links get a quick, consistent transition by default */
+button,
+a {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
+    opacity 150ms ease, transform 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 @layer utilities {
   .redline-underline {
     text-decoration: underline wavy #c81e3a;
     text-underline-offset: 3px;
+  }
+
+  .animate-stamp-in {
+    animation: stamp-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1.1) both;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 380ms ease both;
+  }
+}
+
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-14deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06) rotate(-4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -112,7 +112,7 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
         </button>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_320px] gap-6">
+      <div className="grid md:grid-cols-[minmax(0,1fr)_320px] gap-6">
         {/* Editable resume text */}
         <div>
           <label className="block text-xs uppercase tracking-widest text-slate mb-2">
@@ -143,7 +143,7 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
         </div>
 
         {/* AI rewrite suggestions to apply */}
-        <div>
+        <div className="min-w-0">
           <label className="block text-xs uppercase tracking-widest text-slate mb-2">
             Apply red-pen rewrites
           </label>
@@ -159,12 +159,12 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
               return (
                 <div
                   key={i}
-                  className={`border rounded-sm p-3 transition-colors ${
+                  className={`border rounded-sm p-3 transition-colors overflow-hidden ${
                     applied ? 'border-slate/40 bg-slate/5' : 'border-line bg-white/40'
                   }`}
                 >
-                  <p className="text-xs text-ink/60 line-through mb-1">{bullet.original}</p>
-                  <p className="text-xs text-ink font-medium mb-2">→ {bullet.rewrite}</p>
+                  <p className="text-xs text-ink/60 line-through mb-1 break-words">{bullet.original}</p>
+                  <p className="text-xs text-ink font-medium mb-2 break-words">→ {bullet.rewrite}</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => applyRewrite(bullet, i)}
