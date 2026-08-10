@@ -56,7 +56,7 @@ function ATSEngineCard({ engine, score, issues, note }) {
   )
 }
 
-export default function ResultsDashboard({ data, onReset }) {
+export default function ResultsDashboard({ data, onReset, onBuildResume }) {
   const { analysis, filename } = data
 
   return (
@@ -84,11 +84,21 @@ export default function ResultsDashboard({ data, onReset }) {
       </div>
 
       {/* Verdict */}
-      <div className="border-l-4 border-ink pl-5 mb-10">
+      <div className="border-l-4 border-ink pl-5 mb-6">
         <p className="font-display italic text-lg text-ink leading-relaxed">
           "{analysis.summary}"
         </p>
       </div>
+
+      {onBuildResume && (
+        <button
+          onClick={onBuildResume}
+          className="w-full mb-10 border-2 border-ink text-ink font-body font-medium py-3
+            rounded-sm hover:bg-ink hover:text-manuscript transition-colors"
+        >
+          Build improved resume — apply rewrites &amp; export →
+        </button>
+      )}
 
       {/* Section scores */}
       <div className="mb-10">

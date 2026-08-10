@@ -4,6 +4,7 @@ import UploadForm from './components/UploadForm'
 import ResultsDashboard from './components/ResultsDashboard'
 import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
+import ResumeEditor from './components/ResumeEditor'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -76,6 +77,7 @@ function UsageIndicator({ usage }) {
 function MainContent({ view, setView }) {
   const { token } = useAuth()
   const [result, setResult] = useState(null)
+  const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [usage, setUsage] = useState(null)
@@ -138,8 +140,25 @@ function MainContent({ view, setView }) {
     return <HistoryList onBack={() => setView('analyze')} />
   }
 
+  if (result && editing) {
+    return (
+      <ResumeEditor
+        resumeText={result.resume_text}
+        weakBullets={result.analysis.weak_bullets}
+        filename={result.filename}
+        onBack={() => setEditing(false)}
+      />
+    )
+  }
+
   if (result) {
-    return <ResultsDashboard data={result} onReset={() => setResult(null)} />
+    return (
+      <ResultsDashboard
+        data={result}
+        onReset={() => setResult(null)}
+        onBuildResume={() => setEditing(true)}
+      />
+    )
   }
 
   return (

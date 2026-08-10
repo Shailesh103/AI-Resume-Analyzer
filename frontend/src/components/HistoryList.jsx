@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import ResultsDashboard from './ResultsDashboard'
+import ResumeEditor from './ResumeEditor'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -15,6 +16,7 @@ export default function HistoryList({ onBack }) {
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
   const [detail, setDetail] = useState(null)
+  const [editing, setEditing] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function HistoryList({ onBack }) {
       })
       if (!res.ok) throw new Error('Could not load this analysis')
       const data = await res.json()
-      setDetail({ filename: data.filename, analysis: data.analysis })
+      setDetail({ filename: data.filename, resume_text: data.resume_text, analysis: data.analysis })
     } catch (e) {
       setError(e.message)
     } finally {
@@ -53,8 +55,25 @@ export default function HistoryList({ onBack }) {
     setItems((prev) => prev.filter((i) => i.id !== id))
   }
 
+  if (detail && editing) {
+    return (
+      <ResumeEditor
+        resumeText={detail.resume_text}
+        weakBullets={detail.analysis.weak_bullets}
+        filename={detail.filename}
+        onBack={() => setEditing(false)}
+      />
+    )
+  }
+
   if (detail) {
-    return <ResultsDashboard data={detail} onReset={() => setDetail(null)} />
+    return (
+      <ResultsDashboard
+        data={detail}
+        onReset={() => setDetail(null)}
+        onBuildResume={detail.resume_text ? () => setEditing(true) : undefined}
+      />
+    )
   }
 
   return (

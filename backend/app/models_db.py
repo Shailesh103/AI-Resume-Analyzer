@@ -31,6 +31,7 @@ class Analysis(Base):
     overall_score = Column(Integer, nullable=False)
     ats_score = Column(Integer, nullable=False)
     job_match_score = Column(Integer, nullable=True)
+    resume_text = Column(Text, nullable=True)  # raw extracted text, used by the resume editor
     result_json = Column(Text, nullable=False)  # full AnalysisResult stored as JSON text
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

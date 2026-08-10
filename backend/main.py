@@ -8,6 +8,7 @@ load_dotenv()
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -21,11 +22,13 @@ from app.auth import (
     verify_password,
 )
 from app.database import get_db, init_db
+from app.exporter import build_resume_docx
 from app.models_db import Analysis, User
 from app.parser import extract_text
 from app.rate_limit import check_rate_limit, get_usage_status, log_usage
 from app.schemas import (
     AnalyzeResponse,
+    ExportRequest,
     HistoryDetail,
     HistoryItem,
     TokenResponse,
@@ -138,12 +141,13 @@ async def analyze(
             overall_score=result.overall_score,
             ats_score=result.ats_score,
             job_match_score=result.job_match_score,
+            resume_text=resume_text,
             result_json=result.model_dump_json(),
         )
         db.add(record)
         db.commit()
 
-    return AnalyzeResponse(filename=resume.filename, analysis=result)
+    return AnalyzeResponse(filename=resume.filename, resume_text=resume_text, analysis=result)
 
 
 @app.get("/usage")
@@ -155,6 +159,20 @@ def usage(
     """Lets the frontend show 'X scans left today' before the user even uploads."""
     user_id = current_user.id if current_user else None
     return get_usage_status(db, request, user_id)
+
+
+# ---------------------------------------------------------------------------
+# Export (build an improved resume from edited text, download as .docx)
+# ---------------------------------------------------------------------------
+
+@app.post("/export/docx")
+def export_docx(payload: ExportRequest):
+    docx_bytes = build_resume_docx(payload.resume_text)
+    return StreamingResponse(
+        iter([docx_bytes]),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="resume.docx"'},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +216,7 @@ def get_history_item(
         id=record.id,
         filename=record.filename,
         created_at=record.created_at.isoformat(),
+        resume_text=record.resume_text,
         analysis=json.loads(record.result_json),
     )
 

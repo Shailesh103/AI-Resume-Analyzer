@@ -55,7 +55,12 @@ class AnalysisResult(BaseModel):
 
 class AnalyzeResponse(BaseModel):
     filename: str
+    resume_text: str = Field(..., description="The raw extracted resume text, so the frontend can offer editing")
     analysis: AnalysisResult
+
+
+class ExportRequest(BaseModel):
+    resume_text: str = Field(..., min_length=1)
 
 
 # --- Auth & history schemas ---
@@ -100,4 +105,5 @@ class HistoryDetail(BaseModel):
     id: str
     filename: str
     created_at: str
+    resume_text: Optional[str] = None
     analysis: AnalysisResult
