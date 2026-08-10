@@ -2,22 +2,70 @@ import { useState } from 'react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+/** Escapes regex special characters in a literal string. */
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Builds a regex that matches `original` even if whitespace differs slightly
+ * from what's in the editable text (common when the source resume has missing
+ * spaces from PDF extraction, and the AI's quoted "original" bullet cleans them up).
+ * Every run of whitespace in `original` becomes "zero or more whitespace" in the pattern.
+ */
+function buildFlexibleMatcher(original) {
+  const pattern = escapeRegex(original).replace(/\s+/g, '\\s*')
+  try {
+    return new RegExp(pattern)
+  } catch {
+    return null
+  }
+}
+
 export default function ResumeEditor({ resumeText, weakBullets, filename, onBack }) {
   const [text, setText] = useState(resumeText || '')
   const [appliedIndices, setAppliedIndices] = useState(new Set())
+  const [copiedIndices, setCopiedIndices] = useState(new Set())
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState(null)
 
   function applyRewrite(bullet, index) {
-    if (!text.includes(bullet.original)) {
-      setError(
-        `Couldn't find that exact line in the text below — it may have already been edited. Paste the rewrite in manually if needed.`
-      )
+    // Fast path: exact match.
+    if (text.includes(bullet.original)) {
+      setText((prev) => prev.replace(bullet.original, bullet.rewrite))
+      setAppliedIndices((prev) => new Set(prev).add(index))
+      setError(null)
       return
     }
-    setText((prev) => prev.replace(bullet.original, bullet.rewrite))
-    setAppliedIndices((prev) => new Set(prev).add(index))
-    setError(null)
+
+    // Fallback: whitespace-flexible match, for resumes with missing/extra spaces.
+    const matcher = buildFlexibleMatcher(bullet.original)
+    if (matcher && matcher.test(text)) {
+      setText((prev) => prev.replace(matcher, bullet.rewrite))
+      setAppliedIndices((prev) => new Set(prev).add(index))
+      setError(null)
+      return
+    }
+
+    setError(
+      "Couldn't find that exact line below — it may read slightly differently in the raw text. Use \"Copy\" on that suggestion and paste it in manually."
+    )
+  }
+
+  async function copyRewrite(bullet, index) {
+    try {
+      await navigator.clipboard.writeText(bullet.rewrite)
+      setCopiedIndices((prev) => new Set(prev).add(index))
+      setTimeout(() => {
+        setCopiedIndices((prev) => {
+          const next = new Set(prev)
+          next.delete(index)
+          return next
+        })
+      }, 2000)
+    } catch {
+      setError('Could not copy — select and copy the text manually.')
+    }
   }
 
   async function handleExport() {
@@ -107,6 +155,7 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
           <div className="space-y-3">
             {weakBullets?.map((bullet, i) => {
               const applied = appliedIndices.has(i)
+              const copied = copiedIndices.has(i)
               return (
                 <div
                   key={i}
@@ -116,16 +165,25 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
                 >
                   <p className="text-xs text-ink/60 line-through mb-1">{bullet.original}</p>
                   <p className="text-xs text-ink font-medium mb-2">→ {bullet.rewrite}</p>
-                  <button
-                    onClick={() => applyRewrite(bullet, i)}
-                    disabled={applied}
-                    className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-full border
-                      border-redline text-redline hover:bg-redline hover:text-manuscript
-                      transition-colors disabled:opacity-40 disabled:hover:bg-transparent
-                      disabled:hover:text-redline disabled:cursor-default"
-                  >
-                    {applied ? 'Applied ✓' : 'Insert into resume'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => applyRewrite(bullet, i)}
+                      disabled={applied}
+                      className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-full border
+                        border-redline text-redline hover:bg-redline hover:text-manuscript
+                        transition-colors disabled:opacity-40 disabled:hover:bg-transparent
+                        disabled:hover:text-redline disabled:cursor-default"
+                    >
+                      {applied ? 'Applied ✓' : 'Insert into resume'}
+                    </button>
+                    <button
+                      onClick={() => copyRewrite(bullet, i)}
+                      className="text-xs uppercase tracking-widest px-2.5 py-1 rounded-full border
+                        border-line text-slate hover:border-slate hover:text-ink transition-colors"
+                    >
+                      {copied ? 'Copied ✓' : 'Copy'}
+                    </button>
+                  </div>
                 </div>
               )
             })}

@@ -70,7 +70,11 @@ otherwise set to null>
 Rules:
 - Be specific and evidence-based. Reference actual phrases from the resume, not generic advice.
 - For weak_bullets, pick the 3-6 WEAKEST bullets, not every bullet. Prioritize ones missing \
-metrics/impact or using weak verbs ("responsible for", "helped with", "worked on").
+metrics/impact or using weak verbs ("responsible for", "helped with", "worked on"). The \
+"original" field MUST be copied character-for-character from the resume text you were given — \
+including any missing spaces, run-together words, or unusual spacing. Do NOT clean up or add \
+spaces the source text doesn't have. This field is used for exact text matching downstream, so \
+any change to the original wording or spacing will break it.
 - Rewrites should follow: Strong action verb + what you did + measurable impact/result. Invent \
 plausible placeholder metrics only if none exist, and mark them clearly with [X%] / [X] style \
 brackets so the candidate knows to fill in a real number.
