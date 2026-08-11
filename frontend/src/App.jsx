@@ -46,10 +46,10 @@ function Header({ view, setView }) {
           Redline<span className="text-redline">.</span>
         </button>
 
-        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto">
+        <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto min-w-0">
           {!loading && user && (
             <>
-           
+              
               <NavLink active={view === 'history'} onClick={() => setView('history')}>
                 History
               </NavLink>
@@ -168,7 +168,7 @@ function MainContent({ view, setView }) {
     return <HistoryList onBack={() => setView('analyze')} />
   }
 
- 
+
 
   if (result && editing) {
     return (
@@ -194,7 +194,7 @@ function MainContent({ view, setView }) {
   return (
     <>
       <div className="max-w-2xl mx-auto text-center mb-10">
-        <h2 className="font-display text-3xl md:text-4xl text-ink leading-tight">
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-ink leading-tight">
           Get your resume <span className="italic">marked up</span> like a recruiter would.
         </h2>
         <p className="text-slate mt-3">

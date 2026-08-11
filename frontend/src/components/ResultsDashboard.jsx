@@ -61,21 +61,21 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-slate">Editor's markup for</p>
-          <h2 className="font-display text-2xl text-ink">{filename}</h2>
+          <h2 className="font-display text-xl sm:text-2xl text-ink break-words">{filename}</h2>
         </div>
         <button
           onClick={onReset}
-          className="text-sm text-slate hover:text-redline underline underline-offset-4"
+          className="text-sm text-slate hover:text-redline underline underline-offset-4 shrink-0"
         >
           Analyze another
         </button>
       </div>
 
       {/* Score stamps */}
-      <div className="flex flex-wrap gap-8 justify-center bg-white/50 border border-line rounded-sm py-8 mb-8">
+      <div className="flex flex-wrap gap-4 sm:gap-8 justify-center bg-white/50 border border-line rounded-sm py-6 sm:py-8 px-3 mb-8">
         <ScoreStamp label="Overall" score={analysis.overall_score} size="lg" delayMs={0} />
         <ScoreStamp label="ATS Compatibility" score={analysis.ats_score} size="lg" delayMs={90} />
         {analysis.job_match_score !== null && analysis.job_match_score !== undefined && (

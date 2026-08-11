@@ -72,6 +72,22 @@ export function AuthProvider({ children }) {
     setUser(data.user)
   }
 
+  async function loginWithGoogle(idToken) {
+    const res = await fetch(`${API_URL}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken }),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.detail || 'Google sign-in failed')
+    }
+    const data = await res.json()
+    localStorage.setItem(TOKEN_KEY, data.access_token)
+    setToken(data.access_token)
+    setUser(data.user)
+  }
+
   function logout() {
     localStorage.removeItem(TOKEN_KEY)
     setToken(null)
@@ -79,7 +95,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, signup, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   )

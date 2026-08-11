@@ -16,7 +16,8 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=_uuid)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)  # null for Google-only accounts
+    auth_provider = Column(String, nullable=False, default="local")  # "local" or "google"
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     analyses = relationship("Analysis", back_populates="owner", cascade="all, delete-orphan")
@@ -36,6 +37,27 @@ class Analysis(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     owner = relationship("User", back_populates="analyses")
+
+
+class Job(Base):
+    """A job the user is tracking through their application pipeline."""
+    __tablename__ = "jobs"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    company = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    url = Column(String, nullable=True)
+    job_description = Column(Text, nullable=True)
+    status = Column(String, nullable=False, default="saved")  # saved/applied/interviewing/offer/rejected
+    notes = Column(Text, nullable=True)
+    analysis_id = Column(String, ForeignKey("analyses.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
 
 class UsageLog(Base):

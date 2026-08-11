@@ -75,6 +75,10 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
+
 class UserOut(BaseModel):
     id: str
     email: str
@@ -107,3 +111,43 @@ class HistoryDetail(BaseModel):
     created_at: str
     resume_text: Optional[str] = None
     analysis: AnalysisResult
+
+
+# --- Job tracker schemas ---
+
+VALID_JOB_STATUSES = {"saved", "applied", "interviewing", "offer", "rejected"}
+
+
+class JobCreate(BaseModel):
+    company: str
+    title: str
+    url: Optional[str] = None
+    job_description: Optional[str] = None
+    status: str = "saved"
+    notes: Optional[str] = None
+    analysis_id: Optional[str] = None
+
+
+class JobUpdate(BaseModel):
+    company: Optional[str] = None
+    title: Optional[str] = None
+    url: Optional[str] = None
+    job_description: Optional[str] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class JobOut(BaseModel):
+    id: str
+    company: str
+    title: str
+    url: Optional[str] = None
+    job_description: Optional[str] = None
+    status: str
+    notes: Optional[str] = None
+    analysis_id: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+    class Config:
+        from_attributes = True

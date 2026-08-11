@@ -99,10 +99,10 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <p className="text-xs uppercase tracking-widest text-slate">Build improved resume</p>
-          <h2 className="font-display text-2xl text-ink">Edit &amp; export</h2>
+          <h2 className="font-display text-xl sm:text-2xl text-ink">Edit &amp; export</h2>
         </div>
         <button
           onClick={onBack}

@@ -1,13 +1,62 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+
 export default function AuthForm({ onDone }) {
-  const { login, signup } = useAuth()
+  const { login, signup, loginWithGoogle } = useAuth()
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const googleButtonRef = useRef(null)
+
+  const handleGoogleResponse = useCallback(
+    async (response) => {
+      setError(null)
+      setLoading(true)
+      try {
+        await loginWithGoogle(response.credential)
+        onDone?.()
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [loginWithGoogle, onDone]
+  )
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !googleButtonRef.current) return
+
+    let cancelled = false
+
+    function renderGoogleButton() {
+      if (cancelled) return
+      if (!window.google?.accounts?.id) {
+        setTimeout(renderGoogleButton, 150)
+        return
+      }
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      })
+      googleButtonRef.current.innerHTML = ''
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 320,
+        text: mode === 'login' ? 'signin_with' : 'signup_with',
+      })
+    }
+
+    renderGoogleButton()
+    return () => {
+      cancelled = true
+    }
+  }, [mode, handleGoogleResponse])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -37,6 +86,17 @@ export default function AuthForm({ onDone }) {
           ? "Sign in to see your analysis history."
           : "Save every resume you analyze and track your score over time."}
       </p>
+
+      {GOOGLE_CLIENT_ID && (
+        <>
+          <div ref={googleButtonRef} className="mb-4 flex justify-center" />
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-line" />
+            <span className="text-xs text-slate uppercase tracking-widest">or</span>
+            <div className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

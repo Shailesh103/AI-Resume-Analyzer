@@ -23,17 +23,23 @@ from app.auth import (
 )
 from app.database import get_db, init_db
 from app.exporter import build_resume_docx
-from app.models_db import Analysis, User
+from app.google_auth import verify_google_id_token
+from app.models_db import Analysis, Job, User
 from app.parser import extract_text
 from app.rate_limit import check_rate_limit, get_usage_status, log_usage
 from app.schemas import (
     AnalyzeResponse,
     ExportRequest,
+    GoogleAuthRequest,
     HistoryDetail,
     HistoryItem,
+    JobCreate,
+    JobOut,
+    JobUpdate,
     TokenResponse,
     UserCreate,
     UserOut,
+    VALID_JOB_STATUSES,
 )
 
 app = FastAPI(
@@ -91,8 +97,36 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     # OAuth2PasswordRequestForm uses "username" as the field name — we treat it as email.
     user = db.query(User).filter(User.email == form_data.username.lower().strip()).first()
+
+    if user is not None and user.hashed_password is None:
+        raise HTTPException(
+            status_code=401,
+            detail="This account uses Google sign-in. Use the 'Continue with Google' button instead.",
+        )
+
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
+
+    token = create_access_token(user.id)
+    return TokenResponse(access_token=token, user=UserOut.model_validate(user))
+
+
+@app.post("/auth/google", response_model=TokenResponse)
+def auth_google(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
+    google_data = verify_google_id_token(payload.id_token)
+    email = google_data["email"].lower().strip()
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if user is None:
+        # First time signing in with this email — create a Google-linked account.
+        user = User(email=email, hashed_password=None, auth_provider="google")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    # If a user already exists with this email (e.g. they signed up with a
+    # password before), we sign them in anyway — Google has already verified
+    # they own this email address, so this is safe account linking, not a security hole.
 
     token = create_access_token(user.id)
     return TokenResponse(access_token=token, user=UserOut.model_validate(user))
@@ -233,6 +267,94 @@ def delete_history_item(
     if record is None:
         raise HTTPException(status_code=404, detail="Analysis not found.")
     db.delete(record)
+    db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Job tracker (requires login — this feature is inherently persistent/per-user)
+# ---------------------------------------------------------------------------
+
+def _job_to_out(job: Job) -> JobOut:
+    return JobOut(
+        id=job.id,
+        company=job.company,
+        title=job.title,
+        url=job.url,
+        job_description=job.job_description,
+        status=job.status,
+        notes=job.notes,
+        analysis_id=job.analysis_id,
+        created_at=job.created_at.isoformat(),
+        updated_at=job.updated_at.isoformat(),
+    )
+
+
+@app.post("/jobs", response_model=JobOut, status_code=201)
+def create_job(
+    payload: JobCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if payload.status not in VALID_JOB_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {sorted(VALID_JOB_STATUSES)}.")
+
+    job = Job(
+        user_id=current_user.id,
+        company=payload.company.strip(),
+        title=payload.title.strip(),
+        url=payload.url,
+        job_description=payload.job_description,
+        status=payload.status,
+        notes=payload.notes,
+        analysis_id=payload.analysis_id,
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return _job_to_out(job)
+
+
+@app.get("/jobs", response_model=list[JobOut])
+def list_jobs(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    jobs = (
+        db.query(Job)
+        .filter(Job.user_id == current_user.id)
+        .order_by(Job.updated_at.desc())
+        .all()
+    )
+    return [_job_to_out(j) for j in jobs]
+
+
+@app.patch("/jobs/{job_id}", response_model=JobOut)
+def update_job(
+    job_id: str,
+    payload: JobUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == current_user.id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+
+    update_data = payload.model_dump(exclude_unset=True)
+
+    if "status" in update_data and update_data["status"] not in VALID_JOB_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {sorted(VALID_JOB_STATUSES)}.")
+
+    for field, value in update_data.items():
+        setattr(job, field, value)
+
+    db.commit()
+    db.refresh(job)
+    return _job_to_out(job)
+
+
+@app.delete("/jobs/{job_id}", status_code=204)
+def delete_job(
+    job_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    job = db.query(Job).filter(Job.id == job_id, Job.user_id == current_user.id).first()
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    db.delete(job)
     db.commit()
 
 
