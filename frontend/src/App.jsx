@@ -5,7 +5,8 @@ import ResultsDashboard from './components/ResultsDashboard'
 import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
 import ResumeEditor from './components/ResumeEditor'
-
+// import JobTracker from './components/JobTracker'
+import LandingSections from './components/LandingSections'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -93,7 +94,9 @@ function Header({ view, setView }) {
         <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto min-w-0">
           {!loading && user && (
             <>
-              
+              {/* <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
+                Jobs
+              </NavLink> */}
               <NavLink active={view === 'history'} onClick={() => setView('history')}>
                 History
               </NavLink>
@@ -226,6 +229,25 @@ function MainContent({ view, setView }) {
     }
   }
 
+  async function handleUpgrade() {
+    if (!token) {
+      setView('auth')
+      return
+    }
+    try {
+      const res = await fetch(`${API_URL}/billing/checkout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      }
+    } catch {
+      // silently fail — the Header's own Upgrade button is a reliable fallback
+    }
+  }
+
   if (view === 'auth') {
     return <AuthForm onDone={() => setView('analyze')} />
   }
@@ -234,7 +256,9 @@ function MainContent({ view, setView }) {
     return <HistoryList onBack={() => setView('analyze')} />
   }
 
-
+  // if (view === 'jobs') {
+  //   return <JobTracker onBack={() => setView('analyze')} />
+  // }
 
   if (result && editing) {
     return (
@@ -278,6 +302,7 @@ function MainContent({ view, setView }) {
       </div>
       <UploadForm onAnalyze={handleAnalyze} loading={loading} error={error} />
       <UsageIndicator usage={usage} />
+      <LandingSections onUpgrade={handleUpgrade} />
     </>
   )
 }
