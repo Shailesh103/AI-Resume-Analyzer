@@ -10,6 +10,17 @@ description.
 
 ## Stack
 
+---
+
+
+
+## 🎥 Demo Video
+Watch the complete project demonstration on YouTube:
+
+[![Watch the Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=ES_HqacGwaM)
+
+---
+
 - **Backend**: FastAPI (Python) — PDF/DOCX parsing, Chatgpt API call, structured JSON output
 - **Frontend**: React + Vite + Tailwind — "editorial markup" design
 
