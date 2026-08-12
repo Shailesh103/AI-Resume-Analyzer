@@ -79,6 +79,15 @@ class GoogleAuthRequest(BaseModel):
     id_token: str
 
 
+class CheckoutSessionResponse(BaseModel):
+    url: str
+
+
+class BillingStatus(BaseModel):
+    is_pro: bool
+    status: Optional[str] = None
+
+
 class UserOut(BaseModel):
     id: str
     email: str

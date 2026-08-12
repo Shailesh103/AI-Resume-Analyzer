@@ -25,6 +25,7 @@ def get_client() -> OpenAI:
 
 
 def _strip_code_fences(text: str) -> str:
+    """Models sometimes wrap JSON in ```json fences despite instructions — strip if present."""
     text = text.strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
@@ -33,7 +34,7 @@ def _strip_code_fences(text: str) -> str:
 
 async def analyze_resume(resume_text: str, job_description: str | None) -> AnalysisResult:
     client = get_client()
-    model = os.getenv("OPENAI_MODEL", "gpt-5.5")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     user_prompt = build_user_prompt(resume_text, job_description)
 
@@ -56,11 +57,15 @@ async def analyze_resume(resume_text: str, job_description: str | None) -> Analy
     try:
         data = json.loads(cleaned)
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=502, detail=f"Could not parse analysis result: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not parse analysis result: {e}",
+        )
 
     try:
         return AnalysisResult(**data)
     except Exception as e:
         raise HTTPException(
-            status_code=502, detail=f"Analysis result did not match expected format: {e}"
+            status_code=502,
+            detail=f"Analysis result did not match expected format: {e}",
         )

@@ -1,14 +1,16 @@
 """
 Daily rate limiting for the /analyze endpoint.
 
-Logged-in users and guests (identified by IP) each get a daily quota. This
-protects the OpenAI API key from runaway costs if the app gets shared widely
-or hit by a bot.
+Guests, free logged-in users, and Pro (paying) users each get a daily quota.
+This protects the OpenAI API key from runaway costs if the app gets shared
+widely or hit by a bot — even Pro users get a (generous) cap, not truly
+unlimited, since a stuck retry loop or bug could otherwise run up a large bill.
 
 Limits are configurable via environment variables so they can be tuned
 without a code change:
   GUEST_DAILY_LIMIT   (default 3)
   USER_DAILY_LIMIT    (default 10)
+  PRO_DAILY_LIMIT     (default 100)
 """
 import os
 from datetime import datetime, timezone, timedelta
@@ -20,6 +22,7 @@ from .models_db import UsageLog
 
 GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 USER_DAILY_LIMIT = int(os.getenv("USER_DAILY_LIMIT", "10"))
+PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "100"))
 
 
 def get_client_ip(request: Request) -> str:
@@ -37,15 +40,19 @@ def _identifier_for(request: Request, user_id: str | None) -> str:
     return f"ip:{get_client_ip(request)}"
 
 
-def _limit_for(user_id: str | None) -> int:
+def _limit_for(user_id: str | None, is_pro: bool) -> int:
+    if is_pro:
+        return PRO_DAILY_LIMIT
     return USER_DAILY_LIMIT if user_id else GUEST_DAILY_LIMIT
 
 
-def check_rate_limit(db: Session, request: Request, user_id: str | None) -> None:
+def check_rate_limit(
+    db: Session, request: Request, user_id: str | None, is_pro: bool = False
+) -> None:
     """Raises HTTP 429 if this user/guest has hit their daily quota.
     Call this BEFORE the expensive OpenAI call, not after."""
     identifier = _identifier_for(request, user_id)
-    limit = _limit_for(user_id)
+    limit = _limit_for(user_id, is_pro)
 
     since = datetime.now(timezone.utc) - timedelta(hours=24)
     count = (
@@ -55,10 +62,18 @@ def check_rate_limit(db: Session, request: Request, user_id: str | None) -> None
     )
 
     if count >= limit:
-        detail = (
-            f"You've reached your daily limit of {limit} analyses. "
-            + ("Try again tomorrow." if user_id else "Sign in for a higher daily limit, or try again tomorrow.")
-        )
+        if is_pro:
+            detail = f"You've reached your daily limit of {limit} analyses. Try again tomorrow."
+        elif user_id:
+            detail = (
+                f"You've reached your daily limit of {limit} analyses. "
+                "Upgrade to Pro for a higher daily limit, or try again tomorrow."
+            )
+        else:
+            detail = (
+                f"You've reached your daily limit of {limit} analyses. "
+                "Sign in for a higher daily limit, or try again tomorrow."
+            )
         raise HTTPException(status_code=429, detail=detail)
 
 
@@ -70,10 +85,12 @@ def log_usage(db: Session, request: Request, user_id: str | None) -> None:
     db.commit()
 
 
-def get_usage_status(db: Session, request: Request, user_id: str | None) -> dict:
+def get_usage_status(
+    db: Session, request: Request, user_id: str | None, is_pro: bool = False
+) -> dict:
     """Used by a small /usage endpoint so the frontend can show 'X scans left today'."""
     identifier = _identifier_for(request, user_id)
-    limit = _limit_for(user_id)
+    limit = _limit_for(user_id, is_pro)
 
     since = datetime.now(timezone.utc) - timedelta(hours=24)
     count = (

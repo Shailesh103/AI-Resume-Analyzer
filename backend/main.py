@@ -23,12 +23,21 @@ from app.auth import (
 )
 from app.database import get_db, init_db
 from app.exporter import build_resume_docx
+from app.billing import (
+    construct_webhook_event,
+    create_checkout_session,
+    create_portal_session,
+    handle_webhook_event,
+    is_pro_user,
+)
 from app.google_auth import verify_google_id_token
 from app.models_db import Analysis, Job, User
 from app.parser import extract_text
 from app.rate_limit import check_rate_limit, get_usage_status, log_usage
 from app.schemas import (
     AnalyzeResponse,
+    BillingStatus,
+    CheckoutSessionResponse,
     ExportRequest,
     GoogleAuthRequest,
     HistoryDetail,
@@ -152,7 +161,7 @@ async def analyze(
     user_id = current_user.id if current_user else None
 
     # Check the quota BEFORE spending money on the OpenAI call.
-    check_rate_limit(db, request, user_id)
+    check_rate_limit(db, request, user_id, is_pro=is_pro_user(current_user))
 
     file_bytes = await resume.read()
 
@@ -192,7 +201,7 @@ def usage(
 ):
     """Lets the frontend show 'X scans left today' before the user even uploads."""
     user_id = current_user.id if current_user else None
-    return get_usage_status(db, request, user_id)
+    return get_usage_status(db, request, user_id, is_pro=is_pro_user(current_user))
 
 
 # ---------------------------------------------------------------------------
@@ -356,6 +365,36 @@ def delete_job(
         raise HTTPException(status_code=404, detail="Job not found.")
     db.delete(job)
     db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Billing (Stripe)
+# ---------------------------------------------------------------------------
+
+@app.post("/billing/checkout", response_model=CheckoutSessionResponse)
+def billing_checkout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    url = create_checkout_session(db, current_user)
+    return CheckoutSessionResponse(url=url)
+
+
+@app.get("/billing/portal", response_model=CheckoutSessionResponse)
+def billing_portal(current_user: User = Depends(get_current_user)):
+    url = create_portal_session(current_user)
+    return CheckoutSessionResponse(url=url)
+
+
+@app.get("/billing/status", response_model=BillingStatus)
+def billing_status(current_user: User = Depends(get_current_user)):
+    return BillingStatus(is_pro=is_pro_user(current_user), status=current_user.subscription_status)
+
+
+@app.post("/billing/webhook")
+async def billing_webhook(request: Request, db: Session = Depends(get_db)):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+    event = construct_webhook_event(payload, sig_header)
+    handle_webhook_event(db, event)
+    return {"received": True}
 
 
 if __name__ == "__main__":

@@ -18,6 +18,9 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=True)  # null for Google-only accounts
     auth_provider = Column(String, nullable=False, default="local")  # "local" or "google"
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    subscription_status = Column(String, nullable=True)  # active/past_due/canceled/None
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     analyses = relationship("Analysis", back_populates="owner", cascade="all, delete-orphan")

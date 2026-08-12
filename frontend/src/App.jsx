@@ -25,8 +25,10 @@ function NavLink({ active, onClick, children }) {
 }
 
 function Header({ view, setView }) {
-  const { user, logout, loading } = useAuth()
+  const { user, token, logout, loading } = useAuth()
   const [scrolled, setScrolled] = useState(false)
+  const [isPro, setIsPro] = useState(false)
+  const [billingLoading, setBillingLoading] = useState(false)
 
   useEffect(() => {
     function onScroll() {
@@ -35,6 +37,48 @@ function Header({ view, setView }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    if (!token) {
+      setIsPro(false)
+      return
+    }
+    fetch(`${API_URL}/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setIsPro(data.is_pro))
+      .catch(() => {})
+  }, [token])
+
+  async function handleUpgrade() {
+    setBillingLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/billing/checkout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      }
+    } finally {
+      setBillingLoading(false)
+    }
+  }
+
+  async function handleManageBilling() {
+    setBillingLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/billing/portal`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      }
+    } finally {
+      setBillingLoading(false)
+    }
+  }
 
   return (
     <header
@@ -53,6 +97,28 @@ function Header({ view, setView }) {
               <NavLink active={view === 'history'} onClick={() => setView('history')}>
                 History
               </NavLink>
+              {isPro ? (
+                <>
+                  <span className="text-[10px] uppercase tracking-widest text-manuscript bg-gold px-2 py-0.5 rounded-full shrink-0">
+                    Pro
+                  </span>
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                    className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 disabled:opacity-40"
+                  >
+                    Manage billing
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleUpgrade}
+                  disabled={billingLoading}
+                  className="text-xs uppercase tracking-widest text-redline hover:underline shrink-0 disabled:opacity-40"
+                >
+                  {billingLoading ? 'Loading…' : 'Upgrade'}
+                </button>
+              )}
               <span className="hidden sm:inline text-xs text-slate truncate max-w-[160px]">
                 {user.email}
               </span>
@@ -216,6 +282,39 @@ function MainContent({ view, setView }) {
   )
 }
 
+function BillingBanner() {
+  const [message, setMessage] = useState(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const billing = params.get('billing')
+    if (billing === 'success') {
+      setMessage({ type: 'success', text: "You're on Pro now — thanks for upgrading! 🎉" })
+    } else if (billing === 'cancel') {
+      setMessage({ type: 'info', text: 'Checkout was cancelled — no charge was made.' })
+    }
+    if (billing) {
+      params.delete('billing')
+      const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '')
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [])
+
+  if (!message) return null
+
+  return (
+    <div
+      className={`max-w-4xl mx-auto mb-6 px-4 py-3 rounded-sm text-sm border ${
+        message.type === 'success'
+          ? 'border-slate/40 bg-slate/5 text-ink'
+          : 'border-line bg-white/50 text-slate'
+      }`}
+    >
+      {message.text}
+    </div>
+  )
+}
+
 function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
 
@@ -223,6 +322,7 @@ function AppShell() {
     <div className="min-h-screen bg-manuscript bg-paper-texture">
       <Header view={view} setView={setView} />
       <main className="px-4 pb-24">
+        <BillingBanner />
         <MainContent view={view} setView={setView} />
       </main>
     </div>
