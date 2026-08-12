@@ -85,7 +85,8 @@ def construct_webhook_event(payload: bytes, sig_header: str):
 
 def handle_webhook_event(db: Session, event: dict) -> None:
     event_type = event["type"]
-    data = event["data"]["object"]
+    # data = event["data"]["object"]
+    data = event["data"]["object"].to_dict()
 
     if event_type == "checkout.session.completed":
         user = None
