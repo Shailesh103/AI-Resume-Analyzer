@@ -117,8 +117,8 @@ function PricingTeaser({ onUpgrade }) {
           <p className="text-xs uppercase tracking-widest text-slate mb-1">Free</p>
           <p className="font-display text-3xl text-ink mb-4">₹0</p>
           <ul className="space-y-2 text-sm text-ink">
-            <li>· 3 analyses/day as a guest</li>
-            <li>· 10 analyses/day signed in</li>
+            <li>· 2 analyses/day as a guest</li>
+            <li>· 5 analyses/day signed in</li>
             <li>· Full ATS engine breakdown</li>
             <li>· Red-pen rewrites &amp; .docx export</li>
             <li>· Private history &amp; job tracker</li>
