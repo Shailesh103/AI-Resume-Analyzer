@@ -130,7 +130,7 @@ function PricingTeaser({ onUpgrade }) {
           </span>
           <p className="text-xs uppercase tracking-widest text-slate mb-1">Pro</p>
           <p className="font-display text-3xl text-ink mb-4">
-            ₹299<span className="text-sm text-slate font-body">/month</span>
+            ₹199<span className="text-sm text-slate font-body">/month</span>
           </p>
           <ul className="space-y-2 text-sm text-ink mb-5">
             <li>· Everything in Free</li>
