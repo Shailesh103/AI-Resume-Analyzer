@@ -4,12 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#14151A",        // near-black background panels
-        manuscript: "#F6F5F1", // paper background
-        redline: "#C81E3A",    // editor's red pen
-        slate: "#3B4B66",      // secondary accent / links
-        gold: "#B8892B",       // score highlight
-        line: "#DAD7CE",       // hairline rule on paper
+        ink: "#171522",         // deep ink-indigo, warmer than pure black
+        manuscript: "#FBF6ED",  // warm ivory paper (distinct from plain white)
+        redline: "#D8264A",     // editor's red pen — brighter, more alive
+        forest: "#1D8348",      // strong/positive score — green reads as "good"
+        gold: "#D6963A",        // mid-tier score — warmer, brighter amber
+        slate: "#4C4FA8",       // secondary UI — rich indigo instead of gray-blue
+        line: "#E5DCC8",        // warm hairline rule on paper
       },
       fontFamily: {
         display: ["'Fraunces'", "serif"],
@@ -18,7 +19,7 @@ export default {
       },
       backgroundImage: {
         "paper-texture":
-          "radial-gradient(circle at 1px 1px, rgba(20,21,26,0.035) 1px, transparent 0)",
+          "radial-gradient(circle at 1px 1px, rgba(23,21,34,0.045) 1px, transparent 0)",
       },
     },
   },

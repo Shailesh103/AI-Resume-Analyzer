@@ -1,17 +1,17 @@
 import ScoreStamp from './ScoreStamp'
 
 function SectionBar({ name, score, note }) {
-  const barColor = score >= 80 ? 'bg-slate' : score >= 60 ? 'bg-gold' : 'bg-redline'
+  const barColor = score >= 80 ? 'bg-forest' : score >= 60 ? 'bg-gold' : 'bg-redline'
   return (
-    <div className="mb-4">
-      <div className="flex justify-between items-baseline mb-1">
-        <span className="text-sm font-medium text-ink">{name}</span>
-        <span className="font-mono text-xs text-slate">{score}/100</span>
+    <div className="mb-4 min-w-0">
+      <div className="flex justify-between items-baseline gap-2 mb-1">
+        <span className="text-sm font-medium text-ink break-words">{name}</span>
+        <span className="font-mono text-xs text-slate shrink-0">{score}/100</span>
       </div>
       <div className="h-1.5 bg-line/60 rounded-full overflow-hidden">
         <div className={`h-full ${barColor}`} style={{ width: `${score}%` }} />
       </div>
-      <p className="text-xs text-slate mt-1">{note}</p>
+      <p className="text-xs text-slate mt-1 break-words">{note}</p>
     </div>
   )
 }
@@ -29,19 +29,19 @@ function BulletMarkup({ bullet }) {
 }
 
 function ATSEngineCard({ engine, score, issues, note }) {
-  const barColor = score >= 75 ? 'bg-slate' : score >= 50 ? 'bg-gold' : 'bg-redline'
-  const textColor = score >= 75 ? 'text-slate' : score >= 50 ? 'text-gold' : 'text-redline'
+  const barColor = score >= 75 ? 'bg-forest' : score >= 50 ? 'bg-gold' : 'bg-redline'
+  const textColor = score >= 75 ? 'text-forest' : score >= 50 ? 'text-gold' : 'text-redline'
 
   return (
-    <div className="border border-line bg-white/40 rounded-sm p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-ink">{engine}</span>
-        <span className={`font-mono text-sm font-semibold ${textColor}`}>{score}</span>
+    <div className="min-w-0 border border-line bg-white/40 rounded-sm p-4">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-sm font-medium text-ink break-words">{engine}</span>
+        <span className={`font-mono text-sm font-semibold shrink-0 ${textColor}`}>{score}</span>
       </div>
       <div className="h-1.5 bg-line/60 rounded-full overflow-hidden mb-2">
         <div className={`h-full ${barColor}`} style={{ width: `${score}%` }} />
       </div>
-      <p className="text-xs text-slate mb-1.5">{note}</p>
+      <p className="text-xs text-slate mb-1.5 break-words">{note}</p>
       {issues?.length > 0 && (
         <ul className="space-y-1">
           {issues.map((issue, i) => (
@@ -120,7 +120,7 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
             How this resume is likely to parse on each platform, based on known formatting
             behavior of each system.
           </p>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3 min-w-0">
             {analysis.ats_engine_breakdown.map((e, i) => (
               <ATSEngineCard
                 key={i}

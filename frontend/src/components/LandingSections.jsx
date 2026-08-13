@@ -48,10 +48,17 @@ function HowItWorks() {
   )
 }
 
-function FeatureCard({ title, body }) {
+const ACCENTS = [
+  { bar: 'bg-redline', hoverBorder: 'hover:border-redline/40' },
+  { bar: 'bg-forest', hoverBorder: 'hover:border-forest/40' },
+  { bar: 'bg-gold', hoverBorder: 'hover:border-gold/40' },
+  { bar: 'bg-slate', hoverBorder: 'hover:border-slate/40' },
+]
+
+function FeatureCard({ title, body, accent }) {
   return (
-    <div className="border border-line bg-white/40 rounded-sm p-5 hover:border-redline/40 transition-colors">
-      <div className="w-6 h-1 bg-redline mb-3" />
+    <div className={`border border-line bg-white/40 rounded-sm p-5 transition-colors ${accent.hoverBorder}`}>
+      <div className={`w-6 h-1 ${accent.bar} mb-3`} />
       <h3 className="font-display text-base text-ink mb-1.5">{title}</h3>
       <p className="text-sm text-slate leading-relaxed">{body}</p>
     </div>
@@ -87,63 +94,66 @@ function FeatureGrid() {
   ]
 
   return (
-    <section className="max-w-4xl mx-auto py-16 border-t border-line">
-      <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
-        What you get
-      </p>
-      <h2 className="font-display text-3xl text-ink text-center mb-12">
-        Built for the actual application, not just a score
-      </h2>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {features.map((f, i) => (
-          <FeatureCard key={i} {...f} />
-        ))}
+    <section className="bg-slate/5 border-t border-line">
+      <div className="max-w-4xl mx-auto py-16">
+        <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
+          What you get
+        </p>
+        <h2 className="font-display text-3xl text-ink text-center mb-12">
+          Built for the actual application, not just a score
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((f, i) => (
+            <FeatureCard key={i} {...f} accent={ACCENTS[i % ACCENTS.length]} />
+          ))}
+        </div>
       </div>
     </section>
   )
 }
-
 function PricingTeaser({ onUpgrade }) {
   return (
-    <section className="max-w-4xl mx-auto py-16 border-t border-line">
-      <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
-        Pricing
-      </p>
-      <h2 className="font-display text-3xl text-ink text-center mb-12">
-        Start free. Upgrade if you need more.
-      </h2>
-      <div className="grid sm:grid-cols-2 gap-6">
-        <div className="border border-line bg-white/40 rounded-sm p-6">
-          <p className="text-xs uppercase tracking-widest text-slate mb-1">Free</p>
-          <p className="font-display text-3xl text-ink mb-4">₹0</p>
-          <ul className="space-y-2 text-sm text-ink">
-            <li>· 2 analyses/day as a guest</li>
-            <li>· 5 analyses/day signed in</li>
-            <li>· Full ATS engine breakdown</li>
-            <li>· Red-pen rewrites &amp; .docx export</li>
-            <li>· Private history &amp; job tracker</li>
-          </ul>
-        </div>
-        <div className="border-2 border-redline bg-redline/5 rounded-sm p-6 relative">
-          <span className="absolute -top-3 left-6 bg-redline text-manuscript text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
-            Pro
-          </span>
-          <p className="text-xs uppercase tracking-widest text-slate mb-1">Pro</p>
-          <p className="font-display text-3xl text-ink mb-4">
-            ₹199<span className="text-sm text-slate font-body">/month</span>
-          </p>
-          <ul className="space-y-2 text-sm text-ink mb-5">
-            <li>· Everything in Free</li>
-            <li>· 100 analyses/day</li>
-            <li>· Cancel anytime</li>
-          </ul>
-          <button
-            onClick={onUpgrade}
-            className="w-full bg-ink text-manuscript font-body font-medium py-2.5 rounded-sm
-              hover:bg-redline transition-colors"
-          >
-            Upgrade to Pro
-          </button>
+    <section className="bg-gold/5 border-t border-line">
+      <div className="max-w-4xl mx-auto py-16">
+        <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
+          Pricing
+        </p>
+        <h2 className="font-display text-3xl text-ink text-center mb-12">
+          Start free. Upgrade if you need more.
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="border border-line bg-white/40 rounded-sm p-6">
+            <p className="text-xs uppercase tracking-widest text-slate mb-1">Free</p>
+            <p className="font-display text-3xl text-ink mb-4">₹0</p>
+            <ul className="space-y-2 text-sm text-ink">
+              <li className="flex gap-2"><span className="text-forest">✓</span> 3 analyses/day as a guest</li>
+              <li className="flex gap-2"><span className="text-forest">✓</span> 10 analyses/day signed in</li>
+              <li className="flex gap-2"><span className="text-forest">✓</span> Full ATS engine breakdown</li>
+              <li className="flex gap-2"><span className="text-forest">✓</span> Red-pen rewrites &amp; .docx export</li>
+              <li className="flex gap-2"><span className="text-forest">✓</span> Private history &amp; job tracker</li>
+            </ul>
+          </div>
+          <div className="border-2 border-redline bg-redline/5 rounded-sm p-6 relative">
+            <span className="absolute -top-3 left-6 bg-redline text-manuscript text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
+              Pro
+            </span>
+            <p className="text-xs uppercase tracking-widest text-slate mb-1">Pro</p>
+            <p className="font-display text-3xl text-ink mb-4">
+              ₹299<span className="text-sm text-slate font-body">/month</span>
+            </p>
+            <ul className="space-y-2 text-sm text-ink mb-5">
+              <li className="flex gap-2"><span className="text-redline">✓</span> Everything in Free</li>
+              <li className="flex gap-2"><span className="text-redline">✓</span> 100 analyses/day</li>
+              <li className="flex gap-2"><span className="text-redline">✓</span> Cancel anytime</li>
+            </ul>
+            <button
+              onClick={onUpgrade}
+              className="w-full bg-ink text-manuscript font-body font-medium py-2.5 rounded-sm
+                hover:bg-redline transition-colors"
+            >
+              Upgrade to Pro
+            </button>
+          </div>
         </div>
       </div>
     </section>

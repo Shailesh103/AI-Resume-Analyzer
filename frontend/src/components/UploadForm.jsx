@@ -86,7 +86,7 @@ export default function UploadForm({ onAnalyze, loading, error }) {
         />
         {file ? (
           <div className="flex flex-col items-center animate-fade-up">
-            <CheckStampIcon className="w-10 h-10 text-slate mb-3" />
+            <CheckStampIcon className="w-10 h-10 text-forest mb-3" />
             <p className="font-mono text-sm text-ink break-all">{file.name}</p>
             <p className="text-xs text-slate mt-1">Click to choose a different file</p>
           </div>

@@ -8,14 +8,14 @@ body {
 
 /* Visible keyboard focus everywhere, styled to match the red-pen theme */
 :focus-visible {
-  outline: 2px solid #c81e3a;
+  outline: 2px solid #d8264a;
   outline-offset: 2px;
 }
 
 /* Selection color matches the theme instead of the browser default blue */
 ::selection {
-  background: rgba(200, 30, 58, 0.18);
-  color: #14151a;
+  background: rgba(216, 38, 74, 0.18);
+  color: #171522;
 }
 
 /* Slim, quiet scrollbar (webkit) — the paper theme shouldn't fight a fat default bar */
@@ -27,12 +27,12 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #dad7ce;
+  background: #e5dcc8;
   border-radius: 999px;
-  border: 2px solid #f6f5f1;
+  border: 2px solid #fbf6ed;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8b4a8;
+  background: #c9bda0;
 }
 
 /* Buttons/links get a quick, consistent transition by default */

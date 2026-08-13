@@ -160,7 +160,7 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
                 <div
                   key={i}
                   className={`border rounded-sm p-3 transition-colors overflow-hidden ${
-                    applied ? 'border-slate/40 bg-slate/5' : 'border-line bg-white/40'
+                    applied ? 'border-forest/40 bg-forest/5' : 'border-line bg-white/40'
                   }`}
                 >
                   <p className="text-xs text-ink/60 line-through mb-1 break-words">{bullet.original}</p>

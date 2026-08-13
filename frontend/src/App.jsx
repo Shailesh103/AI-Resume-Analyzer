@@ -5,7 +5,7 @@ import ResultsDashboard from './components/ResultsDashboard'
 import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
 import ResumeEditor from './components/ResumeEditor'
-// import JobTracker from './components/JobTracker'
+import JobTracker from './components/JobTracker'
 import LandingSections from './components/LandingSections'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -94,9 +94,9 @@ function Header({ view, setView }) {
         <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto min-w-0">
           {!loading && user && (
             <>
-              {/* <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
+              <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
                 Jobs
-              </NavLink> */}
+              </NavLink>
               <NavLink active={view === 'history'} onClick={() => setView('history')}>
                 History
               </NavLink>
@@ -256,9 +256,9 @@ function MainContent({ view, setView }) {
     return <HistoryList onBack={() => setView('analyze')} />
   }
 
-  // if (view === 'jobs') {
-  //   return <JobTracker onBack={() => setView('analyze')} />
-  // }
+  if (view === 'jobs') {
+    return <JobTracker onBack={() => setView('analyze')} />
+  }
 
   if (result && editing) {
     return (

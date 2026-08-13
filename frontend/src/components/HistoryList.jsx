@@ -6,7 +6,7 @@ import ResumeEditor from './ResumeEditor'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function scoreColor(score) {
-  if (score >= 80) return 'text-slate'
+  if (score >= 80) return 'text-forest'
   if (score >= 60) return 'text-gold'
   return 'text-redline'
 }

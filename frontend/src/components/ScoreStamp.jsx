@@ -1,7 +1,7 @@
 function colorFor(score) {
-  if (score >= 80) return { ring: '#3B4B66', text: '#3B4B66' } // slate = strong
-  if (score >= 60) return { ring: '#B8892B', text: '#B8892B' } // gold = okay
-  return { ring: '#C81E3A', text: '#C81E3A' } // redline = weak
+  if (score >= 80) return { ring: '#1D8348', text: '#1D8348' } // forest = strong
+  if (score >= 60) return { ring: '#D6963A', text: '#D6963A' } // gold = okay
+  return { ring: '#D8264A', text: '#D8264A' } // redline = weak
 }
 
 export default function ScoreStamp({ label, score, size = 'lg', delayMs = 0 }) {
