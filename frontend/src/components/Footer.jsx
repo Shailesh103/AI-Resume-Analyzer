@@ -1,6 +1,6 @@
 // EDIT ME — replace these with your real details before deploying.
 const CONTACT_EMAIL = 'shaileshmadde650@email.com'
-const LOCATION = 'Gauri Khurd, Gauri Bazar, Deoria, India'
+const LOCATION = 'Gauri khurd, Gauri Bazar, Deoria(274202), India'
 const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/in/shailesh-maddhesiya-990451209/',
   instagram: 'https://www.instagram.com/shailesh_maddh/',
@@ -77,9 +77,9 @@ function PinIcon() {
   )
 }
 
-export default function Footer({ setView }) {
+export default function Footer({ setView, onGoHome }) {
   function goToSection(id) {
-    setView('analyze')
+    onGoHome()
     requestAnimationFrame(() => {
       setTimeout(() => {
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -88,7 +88,7 @@ export default function Footer({ setView }) {
   }
 
   function backToTop() {
-    setView('analyze')
+    onGoHome()
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
   }
 

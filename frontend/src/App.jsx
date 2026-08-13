@@ -27,11 +27,12 @@ function NavLink({ active, onClick, children }) {
   )
 }
 
-function Header({ view, setView }) {
+function Header({ view, setView, onGoHome }) {
   const { user, token, logout, loading } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [isPro, setIsPro] = useState(false)
   const [billingLoading, setBillingLoading] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     function onScroll() {
@@ -51,6 +52,11 @@ function Header({ view, setView }) {
       .then((data) => data && setIsPro(data.is_pro))
       .catch(() => {})
   }, [token])
+
+  // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [view])
 
   async function handleUpgrade() {
     setBillingLoading(true)
@@ -83,61 +89,64 @@ function Header({ view, setView }) {
     }
   }
 
+  const navItems = !loading && user && (
+    <>
+      <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
+        Jobs
+      </NavLink>
+      <NavLink active={view === 'history'} onClick={() => setView('history')}>
+        History
+      </NavLink>
+      {isPro ? (
+        <>
+          <span className="text-[10px] uppercase tracking-widest text-manuscript bg-gold px-2 py-0.5 rounded-full shrink-0 w-fit">
+            Pro
+          </span>
+          <button
+            onClick={handleManageBilling}
+            disabled={billingLoading}
+            className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 disabled:opacity-40 text-left"
+          >
+            Manage billing
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={handleUpgrade}
+          disabled={billingLoading}
+          className="text-xs uppercase tracking-widest text-redline hover:underline shrink-0 disabled:opacity-40 text-left"
+        >
+          {billingLoading ? 'Loading…' : 'Upgrade'}
+        </button>
+      )}
+      <span className="text-xs text-slate truncate max-w-[220px] sm:max-w-[160px]">
+        {user.email}
+      </span>
+      <button
+        onClick={() => {
+          logout()
+          setView('analyze')
+        }}
+        className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 text-left"
+      >
+        Sign out
+      </button>
+    </>
+  )
+
   return (
     <header
       className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-12
-        transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(20,21,26,0.15)]' : 'border-transparent'}`}
+        transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(23,21,34,0.15)]' : 'border-transparent'}`}
     >
       <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-4">
-        <button onClick={() => setView('analyze')} className="font-display text-2xl text-ink shrink-0">
+        <button onClick={onGoHome} className="font-display text-2xl text-ink shrink-0">
           Redline<span className="text-redline">.</span>
         </button>
 
-        <div className="flex items-center gap-3 sm:gap-5 overflow-x-auto min-w-0">
-          {!loading && user && (
-            <>
-              <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
-                Jobs
-              </NavLink>
-              <NavLink active={view === 'history'} onClick={() => setView('history')}>
-                History
-              </NavLink>
-              {isPro ? (
-                <>
-                  <span className="text-[10px] uppercase tracking-widest text-manuscript bg-gold px-2 py-0.5 rounded-full shrink-0">
-                    Pro
-                  </span>
-                  <button
-                    onClick={handleManageBilling}
-                    disabled={billingLoading}
-                    className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 disabled:opacity-40"
-                  >
-                    Manage billing
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleUpgrade}
-                  disabled={billingLoading}
-                  className="text-xs uppercase tracking-widest text-redline hover:underline shrink-0 disabled:opacity-40"
-                >
-                  {billingLoading ? 'Loading…' : 'Upgrade'}
-                </button>
-              )}
-              <span className="hidden sm:inline text-xs text-slate truncate max-w-[160px]">
-                {user.email}
-              </span>
-              <button
-                onClick={() => {
-                  logout()
-                  setView('analyze')
-                }}
-                className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0"
-              >
-                Sign out
-              </button>
-            </>
-          )}
+        {/* Desktop nav */}
+        <div className="hidden sm:flex items-center gap-5 min-w-0">
+          {navItems}
           {!loading && !user && (
             <button
               onClick={() => setView('auth')}
@@ -147,7 +156,39 @@ function Header({ view, setView }) {
             </button>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="sm:hidden w-9 h-9 flex items-center justify-center shrink-0"
+          aria-label="Menu"
+        >
+          <div className="w-5 space-y-1.5">
+            <span
+              className={`block h-[1.5px] bg-ink transition-transform ${mobileOpen ? 'translate-y-[6.5px] rotate-45' : ''}`}
+            />
+            <span className={`block h-[1.5px] bg-ink transition-opacity ${mobileOpen ? 'opacity-0' : ''}`} />
+            <span
+              className={`block h-[1.5px] bg-ink transition-transform ${mobileOpen ? '-translate-y-[6.5px] -rotate-45' : ''}`}
+            />
+          </div>
+        </button>
       </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="sm:hidden max-w-4xl mx-auto px-4 pt-4 flex flex-col gap-4 animate-fade-up">
+          {navItems}
+          {!loading && !user && (
+            <button
+              onClick={() => setView('auth')}
+              className="text-xs uppercase tracking-widest text-slate hover:text-redline text-left"
+            >
+              Sign in
+            </button>
+          )}
+        </div>
+      )}
     </header>
   )
 }
@@ -173,13 +214,22 @@ function UsageIndicator({ usage }) {
   )
 }
 
-function MainContent({ view, setView }) {
+function MainContent({ view, setView, homeSignal }) {
   const { token } = useAuth()
   const [result, setResult] = useState(null)
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [usage, setUsage] = useState(null)
+
+  // The header logo can be clicked from any nested state (results shown, editor
+  // open, etc.) — this always forces a full reset back to the true landing page.
+  useEffect(() => {
+    if (homeSignal === 0) return
+    setResult(null)
+    setEditing(false)
+    setError(null)
+  }, [homeSignal])
 
   const refreshUsage = useCallback(async () => {
     try {
@@ -352,15 +402,28 @@ function BillingBanner() {
 
 function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
+  const [homeSignal, setHomeSignal] = useState(0)
+
+  function goHome() {
+    setView('analyze')
+    setHomeSignal((n) => n + 1)
+  }
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col">
-      <Header view={view} setView={setView} />
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative overflow-x-hidden">
+      {/* Soft ambient color glow behind the top of the page — purely decorative */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden -z-10">
+        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-redline/10 blur-3xl" />
+        <div className="absolute -top-20 right-[-80px] w-[380px] h-[380px] rounded-full bg-forest/10 blur-3xl" />
+        <div className="absolute top-40 left-1/3 w-[320px] h-[320px] rounded-full bg-gold/10 blur-3xl" />
+      </div>
+
+      <Header view={view} setView={setView} onGoHome={goHome} />
       <main className="px-4 pb-24 flex-1">
         <BillingBanner />
-        <MainContent view={view} setView={setView} />
+        <MainContent view={view} setView={setView} homeSignal={homeSignal} />
       </main>
-      <Footer setView={setView} />
+      <Footer setView={setView} onGoHome={goHome} />
     </div>
   )
 }
