@@ -4,6 +4,7 @@
 
 body {
   font-family: "IBM Plex Sans", sans-serif;
+  scroll-behavior: smooth;
 }
 
 /* Visible keyboard focus everywhere, styled to match the red-pen theme */

@@ -7,6 +7,8 @@ import HistoryList from './components/HistoryList'
 import ResumeEditor from './components/ResumeEditor'
 import JobTracker from './components/JobTracker'
 import LandingSections from './components/LandingSections'
+import Footer from './components/Footer'
+import { PrivacyPolicy, TermsOfService } from './components/LegalPages'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -260,6 +262,14 @@ function MainContent({ view, setView }) {
     return <JobTracker onBack={() => setView('analyze')} />
   }
 
+  if (view === 'privacy') {
+    return <PrivacyPolicy onBack={() => setView('analyze')} />
+  }
+
+  if (view === 'terms') {
+    return <TermsOfService onBack={() => setView('analyze')} />
+  }
+
   if (result && editing) {
     return (
       <ResumeEditor
@@ -344,12 +354,13 @@ function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture">
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col">
       <Header view={view} setView={setView} />
-      <main className="px-4 pb-24">
+      <main className="px-4 pb-24 flex-1">
         <BillingBanner />
         <MainContent view={view} setView={setView} />
       </main>
+      <Footer setView={setView} />
     </div>
   )
 }

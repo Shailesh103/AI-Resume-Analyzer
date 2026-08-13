@@ -28,7 +28,7 @@ function HowItWorks() {
   ]
 
   return (
-    <section className="max-w-4xl mx-auto py-16 border-t border-line">
+    <section id="how-it-works" className="max-w-4xl mx-auto py-16 border-t border-line scroll-mt-24">
       <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
         How it works
       </p>
@@ -94,7 +94,7 @@ function FeatureGrid() {
   ]
 
   return (
-    <section className="bg-slate/5 border-t border-line">
+    <section id="features" className="bg-slate/5 border-t border-line scroll-mt-24">
       <div className="max-w-4xl mx-auto py-16">
         <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
           What you get
@@ -113,7 +113,7 @@ function FeatureGrid() {
 }
 function PricingTeaser({ onUpgrade }) {
   return (
-    <section className="bg-gold/5 border-t border-line">
+    <section id="pricing" className="bg-gold/5 border-t border-line scroll-mt-24">
       <div className="max-w-4xl mx-auto py-16">
         <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
           Pricing
@@ -204,7 +204,7 @@ function FAQ() {
   ]
 
   return (
-    <section className="max-w-2xl mx-auto py-16 border-t border-line">
+    <section id="faq" className="max-w-2xl mx-auto py-16 border-t border-line scroll-mt-24">
       <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
         Questions
       </p>
