@@ -9,7 +9,7 @@ export default {
         redline: "#D8264A",     // editor's red pen — brighter, more alive
         forest: "#1D8348",      // strong/positive score — green reads as "good"
         gold: "#D6963A",        // mid-tier score — warmer, brighter amber
-        slate: "#4C4FA8",       // secondary UI — rich indigo instead of gray-blue
+        slate: "#4E4F72",       // secondary UI — muted deep indigo, not a loud purple
         line: "#E5DCC8",        // warm hairline rule on paper
       },
       fontFamily: {

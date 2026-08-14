@@ -410,12 +410,13 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative overflow-x-hidden">
-      {/* Soft ambient color glow behind the top of the page — purely decorative */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden -z-10">
-        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-redline/10 blur-3xl" />
-        <div className="absolute -top-20 right-[-80px] w-[380px] h-[380px] rounded-full bg-forest/10 blur-3xl" />
-        <div className="absolute top-40 left-1/3 w-[320px] h-[320px] rounded-full bg-gold/10 blur-3xl" />
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate overflow-x-hidden">
+      {/* Soft gradient-mesh wash behind the top of the page — purely decorative */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />
+        <div className="absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-forest/25 blur-[100px]" />
+        <div className="absolute -top-24 right-[-140px] w-[520px] h-[520px] rounded-full bg-redline/20 blur-[100px]" />
+        <div className="absolute top-44 left-1/2 -translate-x-1/2 w-[460px] h-[460px] rounded-full bg-gold/25 blur-[100px]" />
       </div>
 
       <Header view={view} setView={setView} onGoHome={goHome} />

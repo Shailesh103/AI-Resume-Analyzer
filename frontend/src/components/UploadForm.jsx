@@ -107,7 +107,7 @@ export default function UploadForm({ onAnalyze, loading, error }) {
 
       <div className="mt-6">
         <label className="block text-xs uppercase tracking-widest text-slate mb-2 font-medium">
-          Target job description <span className="text-line">(optional, sharpens the review)</span>
+          Target job description <span className="text-slate/50">(optional, sharpens the review)</span>
         </label>
         <textarea
           value={jobDescription}
