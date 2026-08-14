@@ -410,7 +410,7 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate overflow-x-hidden">
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate">
       {/* Soft gradient-mesh wash behind the top of the page — purely decorative */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden -z-10">
         <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />

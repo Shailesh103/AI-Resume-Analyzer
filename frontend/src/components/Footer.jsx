@@ -1,10 +1,10 @@
 // EDIT ME — replace these with your real details before deploying.
-const CONTACT_EMAIL = 'shaileshmadde650@email.com'
-const LOCATION = 'Gauri khurd, Gauri Bazar, Deoria(274202), India'
+const CONTACT_EMAIL = 'your@email.com'
+const LOCATION = 'Your City, India'
 const SOCIAL_LINKS = {
-  linkedin: 'https://www.linkedin.com/in/shailesh-maddhesiya-990451209/',
-  instagram: 'https://www.instagram.com/shailesh_maddh/',
-  x: 'https://x.com/ShaileshMaddh17',
+  linkedin: 'https://linkedin.com/in/yourhandle',
+  instagram: 'https://instagram.com/yourhandle',
+  x: 'https://x.com/yourhandle',
 }
 
 function IconButton({ href, label, children }) {
@@ -101,7 +101,11 @@ export default function Footer({ setView, onGoHome }) {
   ]
 
   return (
-    <footer className="mt-24 bg-ink text-manuscript">
+    <footer className="mt-24 bg-ink text-manuscript relative overflow-hidden isolate">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-20 left-1/4 w-[420px] h-[420px] rounded-full bg-redline/15 blur-[110px]" />
+        <div className="absolute -bottom-32 right-1/4 w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
+      </div>
       <div className="max-w-4xl mx-auto px-4 py-16 grid md:grid-cols-[1.4fr_1fr_1fr] gap-10">
         <div>
           <p className="font-display text-2xl mb-3">

@@ -11,6 +11,15 @@ function StepNumber({ n }) {
   )
 }
 
+function SectionGlow({ colors }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className={`absolute -top-24 left-[8%] w-[420px] h-[420px] rounded-full ${colors[0]} blur-[100px]`} />
+      <div className={`absolute -bottom-24 right-[8%] w-[420px] h-[420px] rounded-full ${colors[1]} blur-[100px]`} />
+    </div>
+  )
+}
+
 function HowItWorks() {
   const steps = [
     {
@@ -28,21 +37,24 @@ function HowItWorks() {
   ]
 
   return (
-    <section id="how-it-works" className="max-w-4xl mx-auto py-16 border-t border-line scroll-mt-24">
-      <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
-        How it works
-      </p>
-      <h2 className="font-display text-3xl text-ink text-center mb-12">
-        Three steps. No fluff.
-      </h2>
-      <div className="grid md:grid-cols-3 gap-8">
-        {steps.map((s, i) => (
-          <div key={i} className="flex flex-col items-center text-center">
-            <StepNumber n={i + 1} />
-            <h3 className="font-display text-lg text-ink mt-4 mb-2">{s.title}</h3>
-            <p className="text-sm text-slate leading-relaxed">{s.body}</p>
-          </div>
-        ))}
+    <section id="how-it-works" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-redline/25', 'bg-forest/25']} />
+      <div className="max-w-4xl mx-auto py-16">
+        <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
+          How it works
+        </p>
+        <h2 className="font-display text-3xl text-ink text-center mb-12">
+          Three steps. No fluff.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {steps.map((s, i) => (
+            <div key={i} className="flex flex-col items-center text-center">
+              <StepNumber n={i + 1} />
+              <h3 className="font-display text-lg text-ink mt-4 mb-2">{s.title}</h3>
+              <p className="text-sm text-slate leading-relaxed">{s.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -94,7 +106,8 @@ function FeatureGrid() {
   ]
 
   return (
-    <section id="features" className="bg-slate/5 border-t border-line scroll-mt-24">
+    <section id="features" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-slate/20', 'bg-gold/25']} />
       <div className="max-w-4xl mx-auto py-16">
         <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
           What you get
@@ -113,7 +126,8 @@ function FeatureGrid() {
 }
 function PricingTeaser({ onUpgrade }) {
   return (
-    <section id="pricing" className="bg-gold/5 border-t border-line scroll-mt-24">
+    <section id="pricing" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-gold/25', 'bg-redline/20']} />
       <div className="max-w-4xl mx-auto py-16">
         <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
           Pricing
@@ -204,23 +218,26 @@ function FAQ() {
   ]
 
   return (
-    <section id="faq" className="max-w-2xl mx-auto py-16 border-t border-line scroll-mt-24">
-      <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
-        Questions
-      </p>
-      <h2 className="font-display text-3xl text-ink text-center mb-10">
-        Frequently asked
-      </h2>
-      <div>
-        {items.map((item, i) => (
-          <FAQItem
-            key={i}
-            q={item.q}
-            a={item.a}
-            isOpen={openIndex === i}
-            onToggle={() => setOpenIndex(openIndex === i ? null : i)}
-          />
-        ))}
+    <section id="faq" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-forest/22', 'bg-slate/20']} />
+      <div className="max-w-2xl mx-auto py-16">
+        <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
+          Questions
+        </p>
+        <h2 className="font-display text-3xl text-ink text-center mb-10">
+          Frequently asked
+        </h2>
+        <div>
+          {items.map((item, i) => (
+            <FAQItem
+              key={i}
+              q={item.q}
+              a={item.a}
+              isOpen={openIndex === i}
+              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )
