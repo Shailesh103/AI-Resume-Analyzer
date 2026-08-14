@@ -1,10 +1,10 @@
 // EDIT ME — replace these with your real details before deploying.
-const CONTACT_EMAIL = 'your@email.com'
-const LOCATION = 'Your City, India'
+const CONTACT_EMAIL = 'shaileshmadde650@email.com'
+const LOCATION = 'Gauri Khurd, Gauri Bazar, Deoria (274202) U.P, India'
 const SOCIAL_LINKS = {
-  linkedin: 'https://linkedin.com/in/yourhandle',
-  instagram: 'https://instagram.com/yourhandle',
-  x: 'https://x.com/yourhandle',
+  linkedin: 'https://www.linkedin.com/in/shailesh-maddhesiya-990451209/',
+  instagram: 'https://www.instagram.com/shailesh_maddh/',
+  x: 'https://x.com/ShaileshMaddh17',
 }
 
 function IconButton({ href, label, children }) {
