@@ -96,7 +96,7 @@ export default function UploadForm({ onAnalyze, loading, error }) {
               className={`w-10 h-10 mb-3 transition-colors ${dragActive ? 'text-redline' : 'text-slate/70'}`}
             />
             <p className="font-display text-xl text-ink italic">
-              {dragActive ? 'Drop it right here' : 'Drop your resume here'}
+              {dragActive ? 'Drop it right here' : 'Upload your resume here'}
             </p>
             <p className="text-sm text-slate mt-2">
               PDF, DOCX, or TXT — up to 8MB — or click to browse
