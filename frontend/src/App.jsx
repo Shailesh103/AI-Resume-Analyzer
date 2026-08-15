@@ -464,7 +464,7 @@ function AppShell() {
       </div>
 
       <Header view={view} setView={setView} onGoHome={goHome} />
-      <main className="px-4 pb-24 flex-1">
+      <main className="px-4 flex-1">
         <BillingBanner />
         <MainContent view={view} setView={setView} homeSignal={homeSignal} />
       </main>
