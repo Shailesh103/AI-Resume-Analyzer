@@ -101,7 +101,7 @@ export default function Footer({ setView, onGoHome }) {
   ]
 
   return (
-    <footer className="mt-24 bg-ink text-manuscript relative overflow-hidden isolate">
+    <footer className="mt-0 bg-ink text-manuscript relative overflow-hidden isolate">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-20 left-1/4 w-[420px] h-[420px] rounded-full bg-redline/15 blur-[110px]" />
         <div className="absolute -bottom-32 right-1/4 w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
