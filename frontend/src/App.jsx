@@ -16,7 +16,7 @@ function NavLink({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`text-xs uppercase tracking-widest pb-0.5 border-b-2 transition-colors ${
+      className={`text-xs uppercase tracking-widest pb-0.5 border-b-2 transition-colors text-left w-fit ${
         active
           ? 'text-redline border-redline'
           : 'text-slate border-transparent hover:text-redline hover:border-redline/40'
@@ -52,6 +52,34 @@ function Header({ view, setView, onGoHome }) {
       .then((data) => data && setIsPro(data.is_pro))
       .catch(() => {})
   }, [token])
+
+// Close the mobile menu if the user scrolls while it's open.
+  // useEffect(() => {
+  //   if (!mobileOpen) return
+  //   function onMenuScroll() {
+  //     setMobileOpen(false)
+  //   }
+  //   window.addEventListener('scroll', onMenuScroll, { passive: true })
+  //   return () => window.removeEventListener('scroll', onMenuScroll)
+  // }, [mobileOpen])
+
+  // Close the mobile menu if the user scrolls while it's open.
+  useEffect(() => {
+    if (!mobileOpen) return
+    const startY = window.scrollY
+    function onMenuScroll() {
+      if (Math.abs(window.scrollY - startY) > 10) {
+        setMobileOpen(false)
+      }
+    }
+    const timerId = setTimeout(() => {
+      window.addEventListener('scroll', onMenuScroll, { passive: true })
+    }, 150)
+    return () => {
+      clearTimeout(timerId)
+      window.removeEventListener('scroll', onMenuScroll)
+    }
+  }, [mobileOpen])
 
   // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
   useEffect(() => {
@@ -403,6 +431,11 @@ function BillingBanner() {
 function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
   const [homeSignal, setHomeSignal] = useState(0)
+
+   // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [view])
 
   function goHome() {
     setView('analyze')
