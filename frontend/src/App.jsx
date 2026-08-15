@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import UploadForm from './components/UploadForm'
 import HeroVisual from './components/HeroVisual'
@@ -25,6 +25,60 @@ function NavLink({ active, onClick, children }) {
     >
       {children}
     </button>
+  )
+}
+
+function UserMenu({ email, onSignOut }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  // Close the dropdown on outside click.
+  useEffect(() => {
+    if (!open) return
+    function onClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  return (
+    <div className="relative shrink-0" ref={menuRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
+          open ? 'border-redline text-redline' : 'border-line text-slate hover:border-redline/50 hover:text-redline'
+        }`}
+        aria-label="Account menu"
+        aria-expanded={open}
+      >
+        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-2 w-56 bg-manuscript border border-line rounded-sm
+            shadow-[0_16px_32px_-16px_rgba(23,21,34,0.35)] py-2 z-30 animate-fade-up"
+        >
+          <p className="px-3 py-1.5 text-xs text-slate truncate">{email}</p>
+          <div className="h-px bg-line my-1" />
+          <button
+            onClick={() => {
+              setOpen(false)
+              onSignOut()
+            }}
+            className="w-full text-left px-3 py-1.5 text-xs uppercase tracking-widest text-slate hover:text-redline"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -141,18 +195,13 @@ function Header({ view, setView, onGoHome }) {
           {billingLoading ? 'Loading…' : 'Upgrade'}
         </button>
       )}
-      <span className="text-xs text-slate truncate max-w-[220px] sm:max-w-[160px]">
-        {user.email}
-      </span>
-      <button
-        onClick={() => {
+      <UserMenu
+        email={user.email}
+        onSignOut={() => {
           logout()
           setView('analyze')
         }}
-        className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 text-left"
-      >
-        Sign out
-      </button>
+      />
     </>
   )
 
