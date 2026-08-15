@@ -36,6 +36,10 @@ body {
   background: #c9bda0;
 }
 
+.gallery-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
 /* Buttons/links get a quick, consistent transition by default */
 button,
 a {

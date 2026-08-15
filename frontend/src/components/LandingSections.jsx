@@ -124,6 +124,222 @@ function FeatureGrid() {
     </section>
   )
 }
+function StatsStrip() {
+  const stats = [
+    { n: '5', label: 'ATS engines modeled' },
+    { n: '3–6', label: 'bullets red-penned per scan' },
+    { n: '2', label: 'free scans a day' },
+    { n: '8MB', label: 'max file size' },
+  ]
+
+  return (
+    <section className="relative isolate overflow-hidden border-t border-line">
+      <div className="max-w-4xl mx-auto py-12 grid grid-cols-2 sm:grid-cols-4 divide-x divide-line">
+        {stats.map((s, i) => (
+          <div key={i} className="text-center px-2">
+            <p className="font-display text-3xl sm:text-4xl text-ink">{s.n}</p>
+            <p className="text-xs text-slate mt-1 leading-snug">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+const GALLERY_CARDS = [
+  {
+    label: 'ATS Score Card',
+    accent: 'border-forest',
+    mock: (
+      <div className="flex items-center justify-center h-24">
+        <div className="w-16 h-16 rounded-full border-[3px] border-forest flex items-center justify-center rotate-3">
+          <span className="font-display font-semibold text-xl text-forest">87</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: 'Red-pen Edit',
+    accent: 'border-redline',
+    mock: (
+      <div className="h-24 flex flex-col justify-center gap-2">
+        <div className="relative h-2 w-full bg-redline/20 rounded-sm">
+          <span className="absolute inset-y-1/2 left-0 right-0 h-px bg-redline -translate-y-1/2" />
+        </div>
+        <div className="h-2 w-4/5 bg-forest/25 rounded-sm" />
+        <div className="h-2 w-3/5 bg-slate/20 rounded-sm" />
+      </div>
+    ),
+  },
+  {
+    label: 'Keyword Gap',
+    accent: 'border-gold',
+    mock: (
+      <div className="h-24 flex flex-col justify-center gap-2 items-start">
+        <span className="text-[10px] px-2 py-1 rounded-full border border-forest/40 text-forest">✓ React</span>
+        <span className="text-[10px] px-2 py-1 rounded-full border border-redline/40 text-redline">✕ Docker</span>
+        <span className="text-[10px] px-2 py-1 rounded-full border border-redline/40 text-redline">✕ Kubernetes</span>
+      </div>
+    ),
+  },
+  {
+    label: 'Formatting Flags',
+    accent: 'border-slate',
+    mock: (
+      <div className="h-24 flex flex-col justify-center gap-2">
+        <div className="flex gap-2 items-start">
+          <span className="text-gold shrink-0">⚑</span>
+          <div className="h-2 w-full bg-slate/20 rounded-sm mt-1" />
+        </div>
+        <div className="flex gap-2 items-start">
+          <span className="text-gold shrink-0">⚑</span>
+          <div className="h-2 w-4/5 bg-slate/20 rounded-sm mt-1" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: 'Job Match',
+    accent: 'border-forest',
+    mock: (
+      <div className="h-24 flex flex-col justify-center gap-2">
+        <div className="h-1.5 bg-line/60 rounded-full overflow-hidden">
+          <div className="h-full w-[78%] bg-forest rounded-full" />
+        </div>
+        <p className="text-[10px] text-slate">78% match to job description</p>
+      </div>
+    ),
+  },
+]
+
+function OutputGallery() {
+  return (
+    <section className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-redline/20', 'bg-gold/20']} />
+      <div className="max-w-6xl mx-auto py-16">
+        <p className="text-xs uppercase tracking-widest text-slate text-center mb-2">
+          What comes back
+        </p>
+        <h2 className="font-display text-3xl text-ink text-center mb-4">
+          Every scan, marked up five ways
+        </h2>
+        <p className="text-sm text-slate text-center max-w-md mx-auto mb-10">
+          Scroll through a sample of what one upload gets you — no two resumes get the same
+          note twice.
+        </p>
+        <div className="gallery-scroll flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 px-4 -mx-4">
+          {GALLERY_CARDS.map((c, i) => (
+            <div
+              key={i}
+              className={`snap-start shrink-0 w-56 border-2 ${c.accent} bg-manuscript rounded-sm p-5
+                shadow-[0_16px_32px_-16px_rgba(23,21,34,0.25)] hover:-translate-y-1.5 transition-transform`}
+            >
+              {c.mock}
+              <p className="font-display text-sm text-ink mt-3">{c.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function HighlightBlock({ title, body, bullets, mock, reverse }) {
+  return (
+    <div className={`grid md:grid-cols-2 gap-10 items-center ${reverse ? 'md:[&>*:first-child]:order-2' : ''}`}>
+      <div className="flex justify-center">
+        <div className="w-full max-w-xs border border-line bg-white/50 rounded-sm p-6 shadow-sm">
+          {mock}
+        </div>
+      </div>
+      <div className="max-w-md">
+        <h3 className="font-display text-2xl text-ink mb-3">{title}</h3>
+        <p className="text-sm text-slate leading-relaxed mb-4">{body}</p>
+        <ul className="space-y-2">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex gap-2 text-sm text-ink">
+              <span className="text-redline shrink-0">✎</span> {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function FeatureHighlights() {
+  return (
+    <section id="how-it-helps" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
+      <SectionGlow colors={['bg-forest/18', 'bg-redline/18']} />
+      <div className="max-w-4xl mx-auto py-16 space-y-20">
+        <HighlightBlock
+          title="See exactly what a recruiter would flag"
+          body="Every weak bullet gets struck through with a note on why it falls flat, then rewritten with a real action-verb-plus-metric structure — not generic advice."
+          bullets={[
+            'Vague, no-metric bullets called out one by one',
+            'A concrete rewrite for each, ready to apply',
+            'Applied changes update the score live',
+          ]}
+          mock={
+            <div className="space-y-2">
+              <div className="relative h-2.5 w-full bg-redline/20 rounded-sm">
+                <span className="absolute inset-y-1/2 left-0 right-0 h-px bg-redline -translate-y-1/2" />
+              </div>
+              <div className="relative h-2.5 w-5/6 bg-redline/20 rounded-sm">
+                <span className="absolute inset-y-1/2 left-0 right-0 h-px bg-redline -translate-y-1/2" />
+              </div>
+              <div className="h-px bg-line my-3" />
+              <div className="h-2.5 w-full bg-forest/25 rounded-sm" />
+              <div className="h-2.5 w-4/5 bg-forest/25 rounded-sm" />
+            </div>
+          }
+        />
+
+        <HighlightBlock
+          reverse
+          title="Know your score before you apply"
+          body="Get parseability scores for the platforms companies actually run — Workday, Greenhouse, Lever, iCIMS, and Taleo — instead of one vague, unnamed number."
+          bullets={[
+            'One score per named engine, not an average',
+            'Formatting flags tied to the exact issue',
+            'A keyword-gap list scored against the job post',
+          ]}
+          mock={
+            <div className="flex items-center justify-center py-4">
+              <div className="w-24 h-24 rounded-full border-[3px] border-forest flex items-center justify-center -rotate-3">
+                <span className="font-display font-semibold text-3xl text-forest">87</span>
+              </div>
+            </div>
+          }
+        />
+
+        <HighlightBlock
+          title="Track every application in one place"
+          body="Once your resume is ready, keep the whole job search organized — from saved roles to offers — without a separate spreadsheet."
+          bullets={[
+            'Five stages: Saved, Applied, Interviewing, Offer, Rejected',
+            'Notes and the job posting link on every card',
+            'Signed-in history keeps every past scan, private to you',
+          ]}
+          mock={
+            <div className="grid grid-cols-3 gap-2">
+              {['bg-slate/20', 'bg-gold/25', 'bg-forest/25'].map((c, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className={`h-1.5 w-full rounded-full ${c}`} />
+                  <div className="h-10 border border-line rounded-sm bg-manuscript" />
+                  <div className="h-10 border border-line rounded-sm bg-manuscript" />
+                </div>
+              ))}
+            </div>
+          }
+        />
+      </div>
+    </section>
+  )
+}
+
+  
+
 function PricingTeaser({ onUpgrade }) {
   return (
     <section id="pricing" className="relative isolate overflow-hidden border-t border-line scroll-mt-24">
@@ -246,7 +462,10 @@ function FAQ() {
 export default function LandingSections({ onUpgrade }) {
   return (
     <>
+      <StatsStrip />
+      <OutputGallery />
       <HowItWorks />
+      <FeatureHighlights />
       <FeatureGrid />
       <PricingTeaser onUpgrade={onUpgrade} />
       <FAQ />
