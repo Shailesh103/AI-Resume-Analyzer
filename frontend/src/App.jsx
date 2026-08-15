@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import UploadForm from './components/UploadForm'
+import HeroVisual from './components/HeroVisual'
 import ResultsDashboard from './components/ResultsDashboard'
 import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
@@ -53,17 +54,15 @@ function Header({ view, setView, onGoHome }) {
       .catch(() => {})
   }, [token])
 
-// Close the mobile menu if the user scrolls while it's open.
-  // useEffect(() => {
-  //   if (!mobileOpen) return
-  //   function onMenuScroll() {
-  //     setMobileOpen(false)
-  //   }
-  //   window.addEventListener('scroll', onMenuScroll, { passive: true })
-  //   return () => window.removeEventListener('scroll', onMenuScroll)
-  // }, [mobileOpen])
+  // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [view])
 
   // Close the mobile menu if the user scrolls while it's open.
+  // (The listener is attached a tick late, and needs a small movement threshold,
+  // so the layout-shift scroll caused by the menu opening itself doesn't
+  // immediately close it.)
   useEffect(() => {
     if (!mobileOpen) return
     const startY = window.scrollY
@@ -80,11 +79,6 @@ function Header({ view, setView, onGoHome }) {
       window.removeEventListener('scroll', onMenuScroll)
     }
   }, [mobileOpen])
-
-  // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [view])
 
   async function handleUpgrade() {
     setBillingLoading(true)
@@ -371,24 +365,31 @@ function MainContent({ view, setView, homeSignal }) {
 
   return (
     <>
-      <div className="max-w-2xl mx-auto text-center mb-10">
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-ink leading-tight">
-          Get your resume <span className="italic">marked up</span> like a recruiter would.
-        </h2>
-        <p className="text-slate mt-3">
-          Upload once, get an ATS score, a red-pen edit of your weakest bullets,
-          and the keywords you're missing.
-        </p>
-        {!token && (
-          <p className="text-xs text-slate mt-3">
-            <button onClick={() => setView('auth')} className="underline underline-offset-4 hover:text-redline">
-              Sign in
-            </button>{' '}
-            to save your results and track your score over time.
-          </p>
-        )}
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-center mb-10">
+        <div>
+          <div className="max-w-2xl mx-auto lg:mx-0 text-center lg:text-left mb-8">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-ink leading-tight">
+              Get your resume <span className="italic">marked up</span> like a recruiter would.
+            </h2>
+            <p className="text-slate mt-3">
+              Upload once, get an ATS score, a red-pen edit of your weakest bullets,
+              and the keywords you're missing.
+            </p>
+            {!token && (
+              <p className="text-xs text-slate mt-3">
+                <button onClick={() => setView('auth')} className="underline underline-offset-4 hover:text-redline">
+                  Sign in
+                </button>{' '}
+                to save your results and track your score over time.
+              </p>
+            )}
+          </div>
+          <UploadForm onAnalyze={handleAnalyze} loading={loading} error={error} />
+        </div>
+        <div className="hidden lg:flex justify-center">
+          <HeroVisual />
+        </div>
       </div>
-      <UploadForm onAnalyze={handleAnalyze} loading={loading} error={error} />
       <UsageIndicator usage={usage} />
       <LandingSections onUpgrade={handleUpgrade} />
     </>
@@ -432,7 +433,7 @@ function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
   const [homeSignal, setHomeSignal] = useState(0)
 
-   // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
+  // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [view])

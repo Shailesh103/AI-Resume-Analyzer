@@ -18,12 +18,12 @@ function SectionBar({ name, score, note }) {
 
 function BulletMarkup({ bullet }) {
   return (
-    <div className="border-l-2 border-redline pl-4 py-2 mb-4">
-      <p className="text-sm text-ink/70 line-through decoration-redline decoration-2">
+    <div className="border-l-2 border-redline pl-4 py-2 mb-4 min-w-0">
+      <p className="text-sm text-ink/70 line-through decoration-redline decoration-2 break-all">
         {bullet.original}
       </p>
-      <p className="text-xs text-redline mt-1 italic">✎ {bullet.issue}</p>
-      <p className="text-sm text-ink mt-2 font-medium">→ {bullet.rewrite}</p>
+      <p className="text-xs text-redline mt-1 italic break-words">✎ {bullet.issue}</p>
+      <p className="text-sm text-ink mt-2 font-medium break-words">→ {bullet.rewrite}</p>
     </div>
   )
 }
