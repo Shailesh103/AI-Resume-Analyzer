@@ -445,12 +445,22 @@ function AppShell() {
 
   return (
     <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate">
-      {/* Soft gradient-mesh wash behind the top of the page — purely decorative */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden -z-10">
+      {/* Soft gradient-mesh wash behind the top of the page — purely decorative.
+          Tall enough to cover the hero (including the wider two-column layout),
+          and fades out smoothly at the bottom so there's no hard seam where it ends. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[900px] overflow-hidden -z-10"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+        }}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />
         <div className="absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-forest/25 blur-[100px]" />
         <div className="absolute -top-24 right-[-140px] w-[520px] h-[520px] rounded-full bg-redline/20 blur-[100px]" />
         <div className="absolute top-44 left-1/2 -translate-x-1/2 w-[460px] h-[460px] rounded-full bg-gold/25 blur-[100px]" />
+        <div className="absolute top-[440px] right-[8%] w-[480px] h-[480px] rounded-full bg-redline/15 blur-[110px]" />
+        <div className="absolute top-[520px] left-[15%] w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
       </div>
 
       <Header view={view} setView={setView} onGoHome={goHome} />
