@@ -74,3 +74,26 @@ class UsageLog(Base):
     id = Column(String, primary_key=True, default=_uuid)
     identifier = Column(String, nullable=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class Resume(Base):
+    """A user-built resume (Resume Builder feature) — separate from Analysis,
+    which stores an *uploaded* resume's analysis. This stores structured data
+    the user builds/edits directly, so a template can render it.
+    """
+    __tablename__ = "resumes"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String, nullable=False, default="Untitled resume")
+    template = Column(String, nullable=False, default="modern")
+    resume_data = Column(Text, nullable=False)  # ResumeData, stored as JSON text
+    section_order = Column(Text, nullable=False)  # JSON list of section keys, as text
+    styling = Column(Text, nullable=False, default="{}")  # JSON dict, as text
+    ats_score = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

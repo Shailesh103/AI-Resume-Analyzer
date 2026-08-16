@@ -160,3 +160,140 @@ class JobOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Resume Builder schemas ---
+# This is the "DATA" half of the builder — templates (Phase 3-4) are purely
+# presentational and read this same shape, so switching templates never
+# changes the underlying data.
+
+class PersonalInfo(BaseModel):
+    fullName: str = ""
+    professionalTitle: str = ""
+    email: str = ""
+    phone: str = ""
+    location: str = ""
+    website: str = ""
+    linkedin: str = ""
+    github: str = ""
+
+
+class ExperienceItem(BaseModel):
+    company: str = ""
+    position: str = ""
+    location: str = ""
+    startDate: str = ""
+    endDate: str = ""
+    currentlyWorking: bool = False
+    description: str = ""
+    bulletPoints: List[str] = Field(default_factory=list)
+
+
+class EducationItem(BaseModel):
+    institution: str = ""
+    degree: str = ""
+    field: str = ""
+    startDate: str = ""
+    endDate: str = ""
+    grade: str = ""
+
+
+class SkillGroup(BaseModel):
+    category: str = ""
+    skills: List[str] = Field(default_factory=list)
+
+
+class ProjectItem(BaseModel):
+    name: str = ""
+    description: str = ""
+    technologies: List[str] = Field(default_factory=list)
+    liveUrl: str = ""
+    githubUrl: str = ""
+    bulletPoints: List[str] = Field(default_factory=list)
+
+
+class CertificationItem(BaseModel):
+    name: str = ""
+    issuer: str = ""
+    date: str = ""
+    credentialUrl: str = ""
+
+
+class AchievementItem(BaseModel):
+    title: str = ""
+    description: str = ""
+
+
+class LanguageItem(BaseModel):
+    language: str = ""
+    proficiency: str = ""
+
+
+class CustomSection(BaseModel):
+    title: str = ""
+    content: str = ""
+
+
+class ResumeData(BaseModel):
+    personalInfo: PersonalInfo = Field(default_factory=PersonalInfo)
+    summary: str = ""
+    experience: List[ExperienceItem] = Field(default_factory=list)
+    education: List[EducationItem] = Field(default_factory=list)
+    skills: List[SkillGroup] = Field(default_factory=list)
+    projects: List[ProjectItem] = Field(default_factory=list)
+    certifications: List[CertificationItem] = Field(default_factory=list)
+    achievements: List[AchievementItem] = Field(default_factory=list)
+    languages: List[LanguageItem] = Field(default_factory=list)
+    customSections: List[CustomSection] = Field(default_factory=list)
+
+
+DEFAULT_SECTION_ORDER = [
+    "summary",
+    "experience",
+    "education",
+    "skills",
+    "projects",
+    "certifications",
+    "achievements",
+    "languages",
+]
+
+VALID_TEMPLATES = {"modern", "professional", "executive", "developer", "minimal"}
+
+
+class ResumeCreate(BaseModel):
+    title: str = "Untitled resume"
+    template: str = "modern"
+    resume_data: Optional[ResumeData] = None
+
+
+class ResumeUpdate(BaseModel):
+    title: Optional[str] = None
+    template: Optional[str] = None
+    resume_data: Optional[ResumeData] = None
+    section_order: Optional[List[str]] = None
+    styling: Optional[dict] = None
+
+
+class ResumeListItem(BaseModel):
+    id: str
+    title: str
+    template: str
+    ats_score: Optional[int] = None
+    created_at: str
+    updated_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class ResumeOut(BaseModel):
+    id: str
+    title: str
+    template: str
+    resume_data: ResumeData
+    section_order: List[str]
+    styling: dict
+    ats_score: Optional[int] = None
+    created_at: str
+    updated_at: str

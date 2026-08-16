@@ -31,13 +31,14 @@ from app.billing import (
     is_pro_user,
 )
 from app.google_auth import verify_google_id_token
-from app.models_db import Analysis, Job, User
+from app.models_db import Analysis, Job, Resume, User
 from app.parser import extract_text
 from app.rate_limit import check_rate_limit, get_usage_status, log_usage
 from app.schemas import (
     AnalyzeResponse,
     BillingStatus,
     CheckoutSessionResponse,
+    DEFAULT_SECTION_ORDER,
     ExportRequest,
     GoogleAuthRequest,
     HistoryDetail,
@@ -45,10 +46,16 @@ from app.schemas import (
     JobCreate,
     JobOut,
     JobUpdate,
+    ResumeCreate,
+    ResumeData,
+    ResumeListItem,
+    ResumeOut,
+    ResumeUpdate,
     TokenResponse,
     UserCreate,
     UserOut,
     VALID_JOB_STATUSES,
+    VALID_TEMPLATES,
 )
 
 app = FastAPI(
@@ -365,6 +372,143 @@ def delete_job(
         raise HTTPException(status_code=404, detail="Job not found.")
     db.delete(job)
     db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Resume Builder (Phase 1: data model + CRUD only — templates, PDF export,
+# and AI assistance are separate, later phases)
+# ---------------------------------------------------------------------------
+
+def _resume_to_out(resume: Resume) -> ResumeOut:
+    return ResumeOut(
+        id=resume.id,
+        title=resume.title,
+        template=resume.template,
+        resume_data=json.loads(resume.resume_data),
+        section_order=json.loads(resume.section_order),
+        styling=json.loads(resume.styling),
+        ats_score=resume.ats_score,
+        created_at=resume.created_at.isoformat(),
+        updated_at=resume.updated_at.isoformat(),
+    )
+
+
+@app.post("/resumes", response_model=ResumeOut, status_code=201)
+def create_resume(
+    payload: ResumeCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if payload.template not in VALID_TEMPLATES:
+        raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
+
+    resume_data = payload.resume_data or ResumeData()
+
+    resume = Resume(
+        user_id=current_user.id,
+        title=payload.title.strip() or "Untitled resume",
+        template=payload.template,
+        resume_data=resume_data.model_dump_json(),
+        section_order=json.dumps(DEFAULT_SECTION_ORDER),
+        styling="{}",
+    )
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+    return _resume_to_out(resume)
+
+
+@app.get("/resumes", response_model=list[ResumeListItem])
+def list_resumes(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    resumes = (
+        db.query(Resume)
+        .filter(Resume.user_id == current_user.id)
+        .order_by(Resume.updated_at.desc())
+        .all()
+    )
+    return [
+        ResumeListItem(
+            id=r.id,
+            title=r.title,
+            template=r.template,
+            ats_score=r.ats_score,
+            created_at=r.created_at.isoformat(),
+            updated_at=r.updated_at.isoformat(),
+        )
+        for r in resumes
+    ]
+
+
+@app.get("/resumes/{resume_id}", response_model=ResumeOut)
+def get_resume(
+    resume_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    return _resume_to_out(resume)
+
+
+@app.put("/resumes/{resume_id}", response_model=ResumeOut)
+def update_resume(
+    resume_id: str,
+    payload: ResumeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    if payload.template is not None and payload.template not in VALID_TEMPLATES:
+        raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
+
+    if payload.title is not None:
+        resume.title = payload.title.strip() or "Untitled resume"
+    if payload.template is not None:
+        resume.template = payload.template
+    if payload.resume_data is not None:
+        resume.resume_data = payload.resume_data.model_dump_json()
+    if payload.section_order is not None:
+        resume.section_order = json.dumps(payload.section_order)
+    if payload.styling is not None:
+        resume.styling = json.dumps(payload.styling)
+
+    db.commit()
+    db.refresh(resume)
+    return _resume_to_out(resume)
+
+
+@app.delete("/resumes/{resume_id}", status_code=204)
+def delete_resume(
+    resume_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    db.delete(resume)
+    db.commit()
+
+
+@app.post("/resumes/{resume_id}/duplicate", response_model=ResumeOut, status_code=201)
+def duplicate_resume(
+    resume_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    original = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if original is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    copy = Resume(
+        user_id=current_user.id,
+        title=f"{original.title} (copy)",
+        template=original.template,
+        resume_data=original.resume_data,
+        section_order=original.section_order,
+        styling=original.styling,
+        ats_score=original.ats_score,
+    )
+    db.add(copy)
+    db.commit()
+    db.refresh(copy)
+    return _resume_to_out(copy)
 
 
 # ---------------------------------------------------------------------------

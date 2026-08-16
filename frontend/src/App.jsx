@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import UploadForm from './components/UploadForm'
 import HeroVisual from './components/HeroVisual'
+import ResumeBuilderDashboard from './components/ResumeBuilderDashboard'
 import ResultsDashboard from './components/ResultsDashboard'
 import AuthForm from './components/AuthForm'
 import HistoryList from './components/HistoryList'
@@ -169,6 +170,9 @@ function Header({ view, setView, onGoHome }) {
     <>
       <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
         Jobs
+      </NavLink>
+      <NavLink active={view === 'resumes'} onClick={() => setView('resumes')}>
+        Builder
       </NavLink>
       <NavLink active={view === 'history'} onClick={() => setView('history')}>
         History
@@ -381,6 +385,9 @@ function MainContent({ view, setView, homeSignal }) {
 
   if (view === 'jobs') {
     return <JobTracker onBack={() => setView('analyze')} />
+  }
+  if (view === 'resumes') {
+    return <ResumeBuilderDashboard onBack={() => setView('analyze')} />
   }
 
   if (view === 'privacy') {
