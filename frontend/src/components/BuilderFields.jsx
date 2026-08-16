@@ -1,3 +1,5 @@
+import { AiAssistButton, BULLET_ACTIONS } from './AiAssist'
+
 const inputClass =
   'w-full border border-line bg-white/70 rounded-sm px-3 py-2 text-sm ' +
   'focus:outline-none focus:ring-2 focus:ring-redline/40 focus:border-redline'
@@ -77,6 +79,50 @@ export function StringListEditor({ items, onChange, placeholder, addLabel = '+ A
       ))}
       <button type="button" onClick={add} className="text-xs uppercase tracking-widest text-redline hover:underline">
         {addLabel}
+      </button>
+    </div>
+  )
+}
+
+/** Editable list of bullet points with an "Improve with AI" action per row (Phase 8). */
+export function BulletListEditor({ items, onChange, placeholder }) {
+  function updateAt(i, value) {
+    const next = [...items]
+    next[i] = value
+    onChange(next)
+  }
+  function removeAt(i) {
+    onChange(items.filter((_, idx) => idx !== i))
+  }
+  function add() {
+    onChange([...items, ''])
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, i) => (
+        <div key={i}>
+          <div className="flex items-center gap-2">
+            <input
+              value={item}
+              onChange={(e) => updateAt(i, e.target.value)}
+              placeholder={placeholder}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => removeAt(i)}
+              className="text-slate hover:text-redline text-lg shrink-0 w-6"
+              aria-label="Remove"
+            >
+              ×
+            </button>
+          </div>
+          <AiAssistButton text={item} actions={BULLET_ACTIONS} onAccept={(s) => updateAt(i, s)} />
+        </div>
+      ))}
+      <button type="button" onClick={add} className="text-xs uppercase tracking-widest text-redline hover:underline">
+        + Add bullet
       </button>
     </div>
   )

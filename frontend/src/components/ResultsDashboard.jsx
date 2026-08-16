@@ -60,7 +60,7 @@ export default function ResultsDashboard({ data, onReset, onBuildResume }) {
   const { analysis, filename } = data
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-16">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-8">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-slate">Editor's markup for</p>

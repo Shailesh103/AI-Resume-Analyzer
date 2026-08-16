@@ -243,7 +243,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl text-ink">My resumes</h2>
         <div className="flex items-center gap-4">

@@ -175,7 +175,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-16">
       {/* Top bar */}
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">

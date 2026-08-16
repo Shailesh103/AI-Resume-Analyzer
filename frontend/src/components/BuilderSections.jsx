@@ -1,4 +1,5 @@
-import { Field, TextAreaField, CheckboxField, StringListEditor, ItemCard, useListHelpers } from './BuilderFields'
+import { Field, TextAreaField, CheckboxField, StringListEditor, BulletListEditor, ItemCard, useListHelpers } from './BuilderFields'
+import { AiAssistButton, SUMMARY_ACTIONS, PROJECT_DESCRIPTION_ACTIONS } from './AiAssist'
 
 export function PersonalInfoSection({ data, onChange }) {
   function set(key, value) {
@@ -25,12 +26,15 @@ export function PersonalInfoSection({ data, onChange }) {
 
 export function SummarySection({ value, onChange }) {
   return (
-    <TextAreaField
-      value={value}
-      onChange={onChange}
-      rows={4}
-      placeholder="A 2-3 sentence pitch — who you are, your strongest skills, and what you're looking for."
-    />
+    <div>
+      <TextAreaField
+        value={value}
+        onChange={onChange}
+        rows={4}
+        placeholder="A 2-3 sentence pitch — who you are, your strongest skills, and what you're looking for."
+      />
+      <AiAssistButton text={value} actions={SUMMARY_ACTIONS} onAccept={onChange} />
+    </div>
   )
 }
 
@@ -84,11 +88,10 @@ export function ExperienceSection({ items, onChange }) {
           />
           <div>
             <span className="block text-xs uppercase tracking-widest text-slate mb-1">Bullet points</span>
-            <StringListEditor
+            <BulletListEditor
               items={exp.bulletPoints}
               onChange={(v) => updateItem(i, { bulletPoints: v })}
               placeholder="Increased X by Y% through Z"
-              addLabel="+ Add bullet"
             />
           </div>
         </ItemCard>
@@ -203,12 +206,20 @@ export function ProjectsSection({ items, onChange }) {
           onMoveDown={i < items.length - 1 ? () => moveItem(i, 1) : null}
         >
           <Field label="Project name" value={proj.name} onChange={(v) => updateItem(i, { name: v })} />
-          <TextAreaField
-            label="Description"
-            value={proj.description}
-            onChange={(v) => updateItem(i, { description: v })}
-            rows={2}
-          />
+          <div>
+            <TextAreaField
+              label="Description"
+              value={proj.description}
+              onChange={(v) => updateItem(i, { description: v })}
+              rows={2}
+            />
+            <AiAssistButton
+              text={[proj.name, proj.technologies.filter(Boolean).join(', ')].filter(Boolean).join(' — ')}
+              actions={PROJECT_DESCRIPTION_ACTIONS}
+              onAccept={(s) => updateItem(i, { description: s })}
+              label="✦ Draft with AI"
+            />
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Live URL" value={proj.liveUrl} onChange={(v) => updateItem(i, { liveUrl: v })} />
             <Field label="GitHub URL" value={proj.githubUrl} onChange={(v) => updateItem(i, { githubUrl: v })} />
@@ -224,11 +235,10 @@ export function ProjectsSection({ items, onChange }) {
           </div>
           <div>
             <span className="block text-xs uppercase tracking-widest text-slate mb-1">Bullet points</span>
-            <StringListEditor
+            <BulletListEditor
               items={proj.bulletPoints}
               onChange={(v) => updateItem(i, { bulletPoints: v })}
               placeholder="Built X that does Y"
-              addLabel="+ Add bullet"
             />
           </div>
         </ItemCard>

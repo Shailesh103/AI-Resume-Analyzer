@@ -24,6 +24,12 @@ GUEST_DAILY_LIMIT = int(os.getenv("GUEST_DAILY_LIMIT", "3"))
 USER_DAILY_LIMIT = int(os.getenv("USER_DAILY_LIMIT", "10"))
 PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "100"))
 
+# Resume Builder's "Improve with AI" actions (Phase 8) get their own, smaller
+# daily pool — separate from the resume-scan quota above — so rewriting a
+# bullet point doesn't eat into someone's daily analyze() count.
+AI_USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "20"))
+AI_PRO_DAILY_LIMIT = int(os.getenv("AI_PRO_DAILY_LIMIT", "200"))
+
 
 def get_client_ip(request: Request) -> str:
     """Render (and most PaaS providers) sit behind a proxy, so the real
@@ -104,3 +110,28 @@ def get_usage_status(
         "limit": limit,
         "remaining": max(0, limit - count),
     }
+
+
+def check_ai_rate_limit(db: Session, request: Request, user_id: str, is_pro: bool = False) -> None:
+    """Same idea as check_rate_limit, but for the AI-assist (Improve with AI) pool.
+    AI-assist always requires login, so there's no guest tier here."""
+    identifier = f"ai:{_identifier_for(request, user_id)}"
+    limit = AI_PRO_DAILY_LIMIT if is_pro else AI_USER_DAILY_LIMIT
+
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    count = (
+        db.query(UsageLog)
+        .filter(UsageLog.identifier == identifier, UsageLog.created_at >= since)
+        .count()
+    )
+    if count >= limit:
+        detail = f"You've reached your daily limit of {limit} AI suggestions. Try again tomorrow."
+        if not is_pro:
+            detail += " Upgrade to Pro for a higher daily limit."
+        raise HTTPException(status_code=429, detail=detail)
+
+
+def log_ai_usage(db: Session, request: Request, user_id: str) -> None:
+    identifier = f"ai:{_identifier_for(request, user_id)}"
+    db.add(UsageLog(identifier=identifier))
+    db.commit()

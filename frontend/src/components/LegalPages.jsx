@@ -1,6 +1,6 @@
 function LegalShell({ title, updated, onBack, children }) {
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto pb-16">
       <button
         onClick={onBack}
         className="text-sm text-slate hover:text-redline underline underline-offset-4 mb-8"

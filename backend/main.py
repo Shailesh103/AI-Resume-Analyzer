@@ -34,9 +34,12 @@ from app.billing import (
 from app.google_auth import verify_google_id_token
 from app.models_db import Analysis, Job, Resume, User
 from app.parser import extract_text
-from app.rate_limit import check_rate_limit, get_usage_status, log_usage
+from app.rate_limit import check_ai_rate_limit, check_rate_limit, get_usage_status, log_ai_usage, log_usage
+from app.ai_assist import get_ai_suggestion
 from app.pdf_generator import build_resume_pdf
 from app.schemas import (
+    AIAssistRequest,
+    AIAssistResponse,
     AnalyzeResponse,
     BillingStatus,
     CheckoutSessionResponse,
@@ -533,6 +536,21 @@ def generate_resume_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
     )
+
+
+@app.post("/ai-assist", response_model=AIAssistResponse)
+def ai_assist(
+    payload: AIAssistRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Powers the Resume Builder's "Improve with AI" buttons. Always shown to the user as an
+    original-vs-suggestion choice on the frontend — never applied automatically."""
+    check_ai_rate_limit(db, request, current_user.id, is_pro=is_pro_user(current_user))
+    suggestion = get_ai_suggestion(payload.action, payload.text, payload.context)
+    log_ai_usage(db, request, current_user.id)
+    return AIAssistResponse(original=payload.text, suggestion=suggestion)
 
 
 # ---------------------------------------------------------------------------

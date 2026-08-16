@@ -297,3 +297,16 @@ class ResumeOut(BaseModel):
     ats_score: Optional[int] = None
     created_at: str
     updated_at: str
+
+
+# --- AI assist (Phase 8) ---
+
+class AIAssistRequest(BaseModel):
+    action: str
+    text: str
+    context: Optional[str] = None
+
+
+class AIAssistResponse(BaseModel):
+    original: str
+    suggestion: str

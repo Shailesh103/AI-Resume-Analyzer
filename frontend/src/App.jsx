@@ -500,7 +500,7 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate">
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate overflow-hidden">
       {/* Soft gradient-mesh wash behind the top of the page — purely decorative.
           Tall enough to cover the hero (including the wider two-column layout),
           and fades out smoothly at the bottom so there's no hard seam where it ends. */}

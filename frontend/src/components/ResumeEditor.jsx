@@ -98,7 +98,7 @@ export default function ResumeEditor({ resumeText, weakBullets, filename, onBack
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <p className="text-xs uppercase tracking-widest text-slate">Build improved resume</p>
