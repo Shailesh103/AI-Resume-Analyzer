@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import BuilderEditor from './BuilderEditor'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -78,7 +79,7 @@ function NewResumeForm({ onCreate, onCancel }) {
   )
 }
 
-function ResumeCard({ resume, onRename, onDuplicate, onDelete }) {
+function ResumeCard({ resume, onEdit, onRename, onDuplicate, onDelete }) {
   const [renaming, setRenaming] = useState(false)
   const [title, setTitle] = useState(resume.title)
 
@@ -124,7 +125,7 @@ function ResumeCard({ resume, onRename, onDuplicate, onDelete }) {
       <p className="text-xs text-slate">Updated {formatDate(resume.updated_at)}</p>
 
       <div className="flex items-center gap-4 mt-1 text-xs uppercase tracking-widest">
-        <button disabled className="text-slate/50 cursor-not-allowed" title="Editor coming in Phase 2">
+        <button onClick={() => onEdit(resume.id)} className="text-redline hover:underline">
           Edit
         </button>
         <button onClick={() => onDuplicate(resume.id)} className="text-slate hover:text-redline">
@@ -143,6 +144,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
   const [resumes, setResumes] = useState(null)
   const [error, setError] = useState(null)
   const [showNewForm, setShowNewForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
     if (!token) return
@@ -168,6 +170,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
       ...(prev || []),
     ])
     setShowNewForm(false)
+    setEditingId(created.id)
   }
 
   async function renameResume(id, title) {
@@ -223,6 +226,22 @@ export default function ResumeBuilderDashboard({ onBack }) {
     )
   }
 
+  if (editingId) {
+    return (
+      <BuilderEditor
+        resumeId={editingId}
+        onBack={() => {
+          setEditingId(null)
+          // Refresh the list so title/updated_at reflect any edits made.
+          fetch(`${API_URL}/resumes`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => res.json())
+            .then(setResumes)
+            .catch(() => {})
+        }}
+      />
+    )
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -244,8 +263,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
       </div>
 
       <p className="text-xs text-slate mb-6 max-w-md">
-        This is Phase 1 of the Resume Builder — save and organize resumes here.
-        The live template editor is coming next.
+        Build a resume section by section with a live preview. Templates and PDF download are coming in the next phases.
       </p>
 
       {showNewForm && <NewResumeForm onCreate={createResume} onCancel={() => setShowNewForm(false)} />}
@@ -267,6 +285,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
             <ResumeCard
               key={r.id}
               resume={r}
+              onEdit={setEditingId}
               onRename={renameResume}
               onDuplicate={duplicateResume}
               onDelete={deleteResume}
