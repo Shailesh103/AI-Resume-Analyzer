@@ -12,12 +12,15 @@ import {
   LanguagesSection,
   CustomSectionsSection,
 } from './BuilderSections'
-import BuilderPreview, { SECTION_TITLES } from './BuilderPreview'
+import ResumeRenderer from './ResumeRenderer'
+import { TEMPLATE_LIST } from './templates/index'
+import { SECTION_TITLES } from './BuilderPreview'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Sections always shown first, in this fixed order, not part of the reorderable list.
-const FIXED_LEADING_SECTIONS = ['personalInfo', 'summary']
+// const FIXED_LEADING_SECTIONS = ['personalInfo', 'summary']
+const FIXED_LEADING_SECTIONS = ['personalInfo']
 
 function SectionForm({ activeKey, resumeData, setField }) {
   switch (activeKey) {
@@ -49,6 +52,7 @@ function SectionForm({ activeKey, resumeData, setField }) {
 export default function BuilderEditor({ resumeId, onBack }) {
   const { token } = useAuth()
   const [title, setTitle] = useState('')
+  const [template, setTemplate] = useState('modern')
   const [resumeData, setResumeData] = useState(null)
   const [sectionOrder, setSectionOrder] = useState([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +72,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
       })
       .then((data) => {
         setTitle(data.title)
+        setTemplate(data.template)
         setResumeData(data.resume_data)
         setSectionOrder(data.section_order)
         setLoading(false)
@@ -79,13 +84,13 @@ export default function BuilderEditor({ resumeId, onBack }) {
   }, [resumeId, token])
 
   const doSave = useCallback(
-    async (nextTitle, nextData, nextOrder) => {
+    async (nextTitle, nextTemplate, nextData, nextOrder) => {
       setSaveStatus('saving')
       try {
         await fetch(`${API_URL}/resumes/${resumeId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: nextTitle, resume_data: nextData, section_order: nextOrder }),
+          body: JSON.stringify({ title: nextTitle, template: nextTemplate, resume_data: nextData, section_order: nextOrder }),
         })
         setSaveStatus('saved')
       } catch {
@@ -95,7 +100,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
     [resumeId, token]
   )
 
-  // Debounced autosave whenever title/resumeData/sectionOrder change.
+  // Debounced autosave whenever title/template/resumeData/sectionOrder change.
   useEffect(() => {
     if (loading || !resumeData) return
     if (skipNextSave.current) {
@@ -104,11 +109,11 @@ export default function BuilderEditor({ resumeId, onBack }) {
     }
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
-      doSave(title, resumeData, sectionOrder)
+      doSave(title, template, resumeData, sectionOrder)
     }, 1000)
     return () => clearTimeout(saveTimer.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, resumeData, sectionOrder])
+  }, [title, template, resumeData, sectionOrder])
 
   function setField(key, value) {
     setResumeData((prev) => ({ ...prev, [key]: value }))
@@ -165,6 +170,28 @@ export default function BuilderEditor({ resumeId, onBack }) {
         </div>
       </div>
 
+      {/* Template selector */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 border-b border-line">
+        {TEMPLATE_LIST.map((t) => (
+          <button
+            key={t.key}
+            disabled={!t.available}
+            onClick={() => setTemplate(t.key)}
+            title={t.available ? t.description : `${t.description} (coming in Phase 4)`}
+            className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
+              !t.available
+                ? 'border-line text-slate/40 cursor-not-allowed'
+                : template === t.key
+                  ? 'border-redline bg-redline text-manuscript'
+                  : 'border-line text-slate hover:text-redline hover:border-redline/40'
+            }`}
+          >
+            {t.label}
+            {!t.available && ' · Soon'}
+          </button>
+        ))}
+      </div>
+
       <div className="grid lg:grid-cols-[180px_1fr_380px] gap-6 items-start">
         {/* Sidebar */}
         <div className={`${showPreview ? 'hidden' : 'flex'} lg:flex flex-col gap-1 overflow-x-auto lg:overflow-visible`}>
@@ -200,10 +227,10 @@ export default function BuilderEditor({ resumeId, onBack }) {
           <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
         </div>
 
-        {/* Live preview */}
+        {/* Live preview — rendered through the real template engine */}
         <div className={showPreview ? 'block' : 'hidden lg:block'}>
           <div className="lg:sticky lg:top-24">
-            <BuilderPreview resumeData={resumeData} sectionOrder={sectionOrder} />
+            <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
           </div>
         </div>
       </div>
