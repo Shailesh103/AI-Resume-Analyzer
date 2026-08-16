@@ -18,8 +18,9 @@ import { SECTION_TITLES } from './BuilderPreview'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-// Sections always shown first, in this fixed order, not part of the reorderable list.
-// const FIXED_LEADING_SECTIONS = ['personalInfo', 'summary']
+// Personal Info is always shown first and isn't part of the reorderable list.
+// Summary lives inside sectionOrder itself (like Experience, Education, ...),
+// so it must NOT also be listed here — that was causing it to render twice.
 const FIXED_LEADING_SECTIONS = ['personalInfo']
 
 function SectionForm({ activeKey, resumeData, setField }) {
@@ -60,6 +61,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
   const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved
   const [showPreview, setShowPreview] = useState(false) // mobile toggle
   const [activeKey, setActiveKey] = useState('personalInfo')
+  const [downloading, setDownloading] = useState(false)
 
   const saveTimer = useRef(null)
   const skipNextSave = useRef(true) // don't autosave the instant we've just loaded
@@ -128,6 +130,38 @@ export default function BuilderEditor({ resumeId, onBack }) {
     setSectionOrder(next)
   }
 
+  const navSections = resumeData ? [...FIXED_LEADING_SECTIONS, ...sectionOrder, 'customSections'] : []
+  const stepIndex = navSections.indexOf(activeKey)
+
+  function goStep(dir) {
+    const next = navSections[stepIndex + dir]
+    if (next) setActiveKey(next)
+  }
+
+  async function downloadPdf() {
+    setDownloading(true)
+    try {
+      const res = await fetch(`${API_URL}/resumes/${resumeId}/generate-pdf`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Could not generate the PDF. Please try again.')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${title || 'resume'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-slate max-w-5xl mx-auto">Loading…</p>
   if (error) {
     return (
@@ -139,8 +173,6 @@ export default function BuilderEditor({ resumeId, onBack }) {
       </div>
     )
   }
-
-  const navSections = [...FIXED_LEADING_SECTIONS, ...sectionOrder, 'customSections']
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -161,11 +193,12 @@ export default function BuilderEditor({ resumeId, onBack }) {
           <span className="text-slate">
             {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved' : ''}
           </span>
-          <button onClick={() => setShowPreview((v) => !v)} className="text-redline hover:underline lg:hidden">
-            {showPreview ? 'Edit' : 'Preview'}
-          </button>
-          <button disabled className="text-slate/50 cursor-not-allowed" title="Coming in Phase 6">
-            Download PDF
+          <button
+            onClick={downloadPdf}
+            disabled={downloading}
+            className="text-redline hover:underline disabled:opacity-50 disabled:cursor-wait"
+          >
+            {downloading ? 'Generating…' : 'Download PDF'}
           </button>
         </div>
       </div>
@@ -177,7 +210,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
             key={t.key}
             disabled={!t.available}
             onClick={() => setTemplate(t.key)}
-            title={t.available ? t.description : `${t.description} (coming in Phase 4)`}
+            title={t.available ? t.description : `${t.description} (coming soon)`}
             className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
               !t.available
                 ? 'border-line text-slate/40 cursor-not-allowed'
@@ -192,9 +225,9 @@ export default function BuilderEditor({ resumeId, onBack }) {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-[180px_1fr_380px] gap-6 items-start">
-        {/* Sidebar */}
-        <div className={`${showPreview ? 'hidden' : 'flex'} lg:flex flex-col gap-1 overflow-x-auto lg:overflow-visible`}>
+      {/* Desktop: sidebar + form + live preview, all visible at once */}
+      <div className="hidden lg:grid lg:grid-cols-[180px_1fr_380px] gap-6 items-start">
+        <div className="flex flex-col gap-1">
           {navSections.map((key) => {
             const isReorderable = sectionOrder.includes(key)
             return (
@@ -208,7 +241,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
                   {SECTION_TITLES[key] || (key === 'personalInfo' ? 'Personal Info' : 'Custom Sections')}
                 </button>
                 {isReorderable && activeKey === key && (
-                  <span className="hidden lg:flex flex-col text-[10px] text-slate">
+                  <span className="flex flex-col text-[10px] text-slate">
                     <button onClick={() => moveSection(key, -1)} className="hover:text-redline leading-none">
                       ▲
                     </button>
@@ -222,17 +255,73 @@ export default function BuilderEditor({ resumeId, onBack }) {
           })}
         </div>
 
-        {/* Form */}
-        <div className={showPreview ? 'hidden lg:block' : 'block'}>
+        <div>
           <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
         </div>
 
-        {/* Live preview — rendered through the real template engine */}
-        <div className={showPreview ? 'block' : 'hidden lg:block'}>
-          <div className="lg:sticky lg:top-24">
-            <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
-          </div>
+        <div className="sticky top-24">
+          <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
         </div>
+      </div>
+
+      {/* Mobile: clean step-based editor — one section at a time, with a Preview toggle */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs uppercase tracking-widest text-slate">
+            {showPreview
+              ? 'Preview'
+              : `Step ${stepIndex + 1} of ${navSections.length} · ${
+                  SECTION_TITLES[activeKey] || (activeKey === 'personalInfo' ? 'Personal Info' : 'Custom Sections')
+                }`}
+          </p>
+          <button onClick={() => setShowPreview((v) => !v)} className="text-xs uppercase tracking-widest text-redline hover:underline">
+            {showPreview ? 'Back to editing' : 'Preview'}
+          </button>
+        </div>
+
+        {!showPreview && (
+          <div className="h-1 bg-line/60 rounded-full overflow-hidden mb-5">
+            <div
+              className="h-full bg-redline rounded-full transition-all"
+              style={{ width: `${((stepIndex + 1) / navSections.length) * 100}%` }}
+            />
+          </div>
+        )}
+
+        {showPreview ? (
+          <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
+        ) : (
+          <>
+            <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
+
+            <div className="flex items-center justify-between mt-8 pt-4 border-t border-line">
+              <button
+                onClick={() => goStep(-1)}
+                disabled={stepIndex <= 0}
+                className="text-xs uppercase tracking-widest text-slate disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ← Back
+              </button>
+              {sectionOrder.includes(activeKey) && (
+                <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-slate">
+                  <button onClick={() => moveSection(activeKey, -1)} className="hover:text-redline">
+                    Move up
+                  </button>
+                  <button onClick={() => moveSection(activeKey, 1)} className="hover:text-redline">
+                    Move down
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={() => goStep(1)}
+                disabled={stepIndex >= navSections.length - 1}
+                className="text-xs uppercase tracking-widest text-ink disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

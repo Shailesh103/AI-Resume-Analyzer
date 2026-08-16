@@ -1,3 +1,4 @@
+import io
 import json
 import os
 from datetime import datetime, timezone
@@ -34,6 +35,7 @@ from app.google_auth import verify_google_id_token
 from app.models_db import Analysis, Job, Resume, User
 from app.parser import extract_text
 from app.rate_limit import check_rate_limit, get_usage_status, log_usage
+from app.pdf_generator import build_resume_pdf
 from app.schemas import (
     AnalyzeResponse,
     BillingStatus,
@@ -509,6 +511,28 @@ def duplicate_resume(
     db.commit()
     db.refresh(copy)
     return _resume_to_out(copy)
+
+
+@app.post("/resumes/{resume_id}/generate-pdf")
+def generate_resume_pdf(
+    resume_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    pdf_bytes = build_resume_pdf(
+        resume_data=json.loads(resume.resume_data),
+        section_order=json.loads(resume.section_order),
+        template=resume.template,
+    )
+
+    safe_title = "".join(c for c in resume.title if c.isalnum() or c in " -_").strip() or "resume"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
+    )
 
 
 # ---------------------------------------------------------------------------
