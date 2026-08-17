@@ -138,14 +138,17 @@ function JobCard({ job, onStatusChange, onDelete }) {
   )
 }
 
-export default function JobTracker({ onBack }) {
+export default function JobTracker({ onBack, onRequireAuth }) {
   const { token, user, loading: authLoading } = useAuth()
   const [jobs, setJobs] = useState(null)
   const [error, setError] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
 
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setJobs([])
+      return
+    }
     fetch(`${API_URL}/jobs`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         if (!res.ok) throw new Error('Could not load jobs')
@@ -190,27 +193,13 @@ export default function JobTracker({ onBack }) {
     setJobs((prev) => prev.filter((j) => j.id !== jobId))
   }
 
-  if (!authLoading && !user) {
-    return (
-      <div className="max-w-md mx-auto text-center">
-        <p className="text-slate mb-4">Sign in to track jobs you're applying to.</p>
-        <button
-          onClick={onBack}
-          className="text-sm underline underline-offset-4 text-slate hover:text-redline"
-        >
-          Go back
-        </button>
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-6xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl text-ink">Job tracker</h2>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowAddForm((v) => !v)}
+            onClick={() => (user ? setShowAddForm((v) => !v) : onRequireAuth())}
             className="text-xs uppercase tracking-widest text-redline hover:underline"
           >
             {showAddForm ? 'Close' : '+ Add job'}
@@ -223,6 +212,13 @@ export default function JobTracker({ onBack }) {
           </button>
         </div>
       </div>
+
+      {!authLoading && !user && (
+        <p className="text-xs text-slate mb-6">
+          Browsing as a guest — <button onClick={onRequireAuth} className="text-redline hover:underline">sign in</button> to
+          save jobs here.
+        </p>
+      )}
 
       {showAddForm && <AddJobForm onAdd={addJob} onCancel={() => setShowAddForm(false)} />}
 

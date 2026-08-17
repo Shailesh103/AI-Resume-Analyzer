@@ -139,7 +139,7 @@ function ResumeCard({ resume, onEdit, onRename, onDuplicate, onDelete }) {
   )
 }
 
-export default function ResumeBuilderDashboard({ onBack }) {
+export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
   const { token, user, loading: authLoading } = useAuth()
   const [resumes, setResumes] = useState(null)
   const [error, setError] = useState(null)
@@ -147,7 +147,10 @@ export default function ResumeBuilderDashboard({ onBack }) {
   const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setResumes([])
+      return
+    }
     fetch(`${API_URL}/resumes`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         if (!res.ok) throw new Error('Could not load your resumes')
@@ -212,20 +215,6 @@ export default function ResumeBuilderDashboard({ onBack }) {
     setResumes((prev) => prev.filter((r) => r.id !== id))
   }
 
-  if (!authLoading && !user) {
-    return (
-      <div className="max-w-md mx-auto text-center">
-        <p className="text-slate mb-4">Sign in to build and save resumes.</p>
-        <button
-          onClick={onBack}
-          className="text-sm underline underline-offset-4 text-slate hover:text-redline"
-        >
-          Go back
-        </button>
-      </div>
-    )
-  }
-
   if (editingId) {
     return (
       <BuilderEditor
@@ -248,7 +237,7 @@ export default function ResumeBuilderDashboard({ onBack }) {
         <h2 className="font-display text-2xl text-ink">My resumes</h2>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowNewForm((v) => !v)}
+            onClick={() => (user ? setShowNewForm((v) => !v) : onRequireAuth())}
             className="text-xs uppercase tracking-widest text-redline hover:underline"
           >
             {showNewForm ? 'Close' : '+ Create resume'}
@@ -261,6 +250,13 @@ export default function ResumeBuilderDashboard({ onBack }) {
           </button>
         </div>
       </div>
+
+      {!authLoading && !user && (
+        <p className="text-xs text-slate mb-6">
+          Browsing as a guest — <button onClick={onRequireAuth} className="text-redline hover:underline">sign in</button> to
+          build and save resumes.
+        </p>
+      )}
 
       <p className="text-xs text-slate mb-6 max-w-md">
         Build a resume section by section with a live preview. Templates and PDF download are coming in the next phases.

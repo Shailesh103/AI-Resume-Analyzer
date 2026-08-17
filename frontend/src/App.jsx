@@ -63,18 +63,35 @@ function UserMenu({ email, onSignOut }) {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-56 bg-manuscript border border-line rounded-sm
-            shadow-[0_16px_32px_-16px_rgba(23,21,34,0.35)] py-2 z-30 animate-fade-up"
+          className="absolute right-0 top-full mt-3 w-64 bg-manuscript border border-line rounded-md
+            shadow-[0_20px_45px_-15px_rgba(23,21,34,0.4)] overflow-hidden z-30 animate-fade-up"
         >
-          <p className="px-3 py-1.5 text-xs text-slate truncate">{email}</p>
-          <div className="h-px bg-line my-1" />
+          {/* Small pointer arrow toward the trigger button */}
+          <div className="absolute -top-1.5 right-3 w-3 h-3 bg-manuscript border-t border-l border-line rotate-45" />
+
+          <div className="relative flex items-center gap-2.5 px-4 py-3 bg-white/40 border-b border-line">
+            <div className="w-7 h-7 rounded-full border border-line flex items-center justify-center text-slate shrink-0">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5" />
+              </svg>
+            </div>
+            <p className="text-xs text-ink truncate">{email}</p>
+          </div>
+
           <button
             onClick={() => {
               setOpen(false)
               onSignOut()
             }}
-            className="w-full text-left px-3 py-1.5 text-xs uppercase tracking-widest text-slate hover:text-redline"
+            className="relative w-full flex items-center gap-2.5 text-left px-4 py-3 text-xs uppercase
+              tracking-widest text-redline hover:bg-redline/5 transition-colors"
           >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
             Sign out
           </button>
         </div>
@@ -166,7 +183,7 @@ function Header({ view, setView, onGoHome }) {
     }
   }
 
-  const navItems = !loading && user && (
+  const navLinks = (
     <>
       <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
         Jobs
@@ -177,6 +194,11 @@ function Header({ view, setView, onGoHome }) {
       <NavLink active={view === 'history'} onClick={() => setView('history')}>
         History
       </NavLink>
+    </>
+  )
+
+  const accountItems = !loading && user && (
+    <>
       {isPro ? (
         <>
           <span className="text-[10px] uppercase tracking-widest text-manuscript bg-gold px-2 py-0.5 rounded-full shrink-0 w-fit">
@@ -221,7 +243,8 @@ function Header({ view, setView, onGoHome }) {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-5 min-w-0">
-          {navItems}
+          {navLinks}
+          {accountItems}
           {!loading && !user && (
             <button
               onClick={() => setView('auth')}
@@ -253,7 +276,8 @@ function Header({ view, setView, onGoHome }) {
       {/* Mobile menu panel */}
       {mobileOpen && (
         <div className="sm:hidden max-w-4xl mx-auto px-4 pt-4 flex flex-col gap-4 animate-fade-up">
-          {navItems}
+          {navLinks}
+          {accountItems}
           {!loading && !user && (
             <button
               onClick={() => setView('auth')}
@@ -289,7 +313,7 @@ function UsageIndicator({ usage }) {
   )
 }
 
-function MainContent({ view, setView, homeSignal }) {
+function MainContent({ view, setView, homeSignal, requireAuth, onAuthDone }) {
   const { token } = useAuth()
   const [result, setResult] = useState(null)
   const [editing, setEditing] = useState(false)
@@ -376,18 +400,18 @@ function MainContent({ view, setView, homeSignal }) {
   }
 
   if (view === 'auth') {
-    return <AuthForm onDone={() => setView('analyze')} />
+    return <AuthForm onDone={onAuthDone} />
   }
 
   if (view === 'history') {
-    return <HistoryList onBack={() => setView('analyze')} />
+    return <HistoryList onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('history')} />
   }
 
   if (view === 'jobs') {
-    return <JobTracker onBack={() => setView('analyze')} />
+    return <JobTracker onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('jobs')} />
   }
   if (view === 'resumes') {
-    return <ResumeBuilderDashboard onBack={() => setView('analyze')} />
+    return <ResumeBuilderDashboard onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('resumes')} />
   }
 
   if (view === 'privacy') {
@@ -488,6 +512,7 @@ function BillingBanner() {
 function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
   const [homeSignal, setHomeSignal] = useState(0)
+  const [postAuthView, setPostAuthView] = useState('analyze')
 
   // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
   useEffect(() => {
@@ -497,6 +522,17 @@ function AppShell() {
   function goHome() {
     setView('analyze')
     setHomeSignal((n) => n + 1)
+  }
+
+  // Send a guest to sign in, remembering which page to return them to once they're in.
+  function requireAuth(fromView) {
+    setPostAuthView(fromView)
+    setView('auth')
+  }
+
+  function handleAuthDone() {
+    setView(postAuthView)
+    setPostAuthView('analyze')
   }
 
   return (
@@ -522,7 +558,13 @@ function AppShell() {
       <Header view={view} setView={setView} onGoHome={goHome} />
       <main className="px-4 flex-1">
         <BillingBanner />
-        <MainContent view={view} setView={setView} homeSignal={homeSignal} />
+        <MainContent
+          view={view}
+          setView={setView}
+          homeSignal={homeSignal}
+          requireAuth={requireAuth}
+          onAuthDone={handleAuthDone}
+        />
       </main>
       <Footer setView={setView} onGoHome={goHome} />
     </div>

@@ -11,8 +11,8 @@ function scoreColor(score) {
   return 'text-redline'
 }
 
-export default function HistoryList({ onBack }) {
-  const { token } = useAuth()
+export default function HistoryList({ onBack, onRequireAuth }) {
+  const { token, user, loading: authLoading } = useAuth()
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
   const [detail, setDetail] = useState(null)
@@ -20,6 +20,7 @@ export default function HistoryList({ onBack }) {
   const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
+    if (!token) return
     fetch(`${API_URL}/history`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         if (!res.ok) throw new Error('Could not load history')
@@ -73,6 +74,30 @@ export default function HistoryList({ onBack }) {
         onReset={() => setDetail(null)}
         onBuildResume={detail.resume_text ? () => setEditing(true) : undefined}
       />
+    )
+  }
+
+  if (!authLoading && !user) {
+    return (
+      <div className="max-w-md mx-auto text-center pb-16">
+        <p className="text-slate mb-4">
+          Sign in and upload a resume first — once you've run an analysis, it'll show up here.
+        </p>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={onRequireAuth}
+            className="text-sm text-redline hover:underline underline-offset-4"
+          >
+            Sign in
+          </button>
+          <button
+            onClick={onBack}
+            className="text-sm text-slate hover:text-redline underline underline-offset-4"
+          >
+            Go back
+          </button>
+        </div>
+      </div>
     )
   }
 
