@@ -36,6 +36,7 @@ from app.models_db import Analysis, Job, Resume, User
 from app.parser import extract_text
 from app.rate_limit import check_ai_rate_limit, check_rate_limit, get_usage_status, log_ai_usage, log_usage
 from app.ai_assist import get_ai_suggestion
+from app.entitlements import is_template_allowed, resume_limit_for
 from app.ats_check import run_ats_check
 from app.job_optimizer import optimize_for_job
 from app.pdf_generator import build_resume_pdf
@@ -410,6 +411,20 @@ def create_resume(
     if payload.template not in VALID_TEMPLATES:
         raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
 
+    is_pro = is_pro_user(current_user)
+
+    if not is_template_allowed(payload.template, is_pro):
+        raise HTTPException(status_code=403, detail="This template is Pro-only. Upgrade to unlock it.")
+
+    limit = resume_limit_for(is_pro)
+    if limit is not None:
+        existing_count = db.query(Resume).filter(Resume.user_id == current_user.id).count()
+        if existing_count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Free plan is limited to {limit} saved resumes. Upgrade to Pro for unlimited resumes.",
+            )
+
     resume_data = payload.resume_data or ResumeData()
 
     resume = Resume(
@@ -471,6 +486,13 @@ def update_resume(
     if payload.template is not None and payload.template not in VALID_TEMPLATES:
         raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
 
+    if (
+        payload.template is not None
+        and payload.template != resume.template
+        and not is_template_allowed(payload.template, is_pro_user(current_user))
+    ):
+        raise HTTPException(status_code=403, detail="This template is Pro-only. Upgrade to unlock it.")
+
     if payload.title is not None:
         resume.title = payload.title.strip() or "Untitled resume"
     if payload.template is not None:
@@ -505,6 +527,15 @@ def duplicate_resume(
     original = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
     if original is None:
         raise HTTPException(status_code=404, detail="Resume not found.")
+
+    limit = resume_limit_for(is_pro_user(current_user))
+    if limit is not None:
+        existing_count = db.query(Resume).filter(Resume.user_id == current_user.id).count()
+        if existing_count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Free plan is limited to {limit} saved resumes. Upgrade to Pro for unlimited resumes.",
+            )
 
     copy = Resume(
         user_id=current_user.id,

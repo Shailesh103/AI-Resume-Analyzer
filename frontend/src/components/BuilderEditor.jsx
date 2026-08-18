@@ -18,6 +18,7 @@ import { TEMPLATE_LIST } from './templates/index'
 import { SECTION_TITLES } from './BuilderPreview'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const PRO_ONLY_TEMPLATES = new Set(['professional', 'executive', 'developer'])
 
 // Personal Info is always shown first and isn't part of the reorderable list.
 // Summary lives inside sectionOrder itself (like Experience, Education, ...),
@@ -52,7 +53,7 @@ function SectionForm({ activeKey, resumeData, setField }) {
 }
 
 export default function BuilderEditor({ resumeId, onBack }) {
-  const { token } = useAuth()
+  const { token, isPro } = useAuth()
   const [title, setTitle] = useState('')
   const [template, setTemplate] = useState('modern')
   const [resumeData, setResumeData] = useState(null)
@@ -207,26 +208,42 @@ export default function BuilderEditor({ resumeId, onBack }) {
       </div>
 
       {/* Template selector */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 border-b border-line">
-        {TEMPLATE_LIST.map((t) => (
-          <button
-            key={t.key}
-            disabled={!t.available}
-            onClick={() => setTemplate(t.key)}
-            title={t.available ? t.description : `${t.description} (coming soon)`}
-            className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
-              !t.available
-                ? 'border-line text-slate/40 cursor-not-allowed'
-                : template === t.key
-                  ? 'border-redline bg-redline text-manuscript'
-                  : 'border-line text-slate hover:text-redline hover:border-redline/40'
-            }`}
-          >
-            {t.label}
-            {!t.available && ' · Soon'}
-          </button>
-        ))}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-1 border-b border-line">
+        {TEMPLATE_LIST.map((t) => {
+          const locked = !isPro && PRO_ONLY_TEMPLATES.has(t.key)
+          const disabled = !t.available || locked
+          return (
+            <button
+              key={t.key}
+              disabled={disabled}
+              onClick={() => setTemplate(t.key)}
+              title={
+                !t.available
+                  ? `${t.description} (coming soon)`
+                  : locked
+                    ? `${t.description} (Pro only)`
+                    : t.description
+              }
+              className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
+                disabled
+                  ? 'border-line text-slate/40 cursor-not-allowed'
+                  : template === t.key
+                    ? 'border-redline bg-redline text-manuscript'
+                    : 'border-line text-slate hover:text-redline hover:border-redline/40'
+              }`}
+            >
+              {t.label}
+              {!t.available && ' · Soon'}
+              {t.available && locked && ' · Pro'}
+            </button>
+          )
+        })}
       </div>
+      {!isPro && (
+        <p className="text-[11px] text-slate mb-5">
+          🔒 Professional, Executive, and Developer are Pro templates — upgrade to unlock every template.
+        </p>
+      )}
 
       {/* Desktop: sidebar + form + live preview, all visible at once */}
       <div className="hidden lg:grid lg:grid-cols-[180px_1fr_380px] gap-6 items-start">

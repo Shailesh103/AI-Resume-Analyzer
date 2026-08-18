@@ -27,7 +27,7 @@ PRO_DAILY_LIMIT = int(os.getenv("PRO_DAILY_LIMIT", "100"))
 # Resume Builder's "Improve with AI" actions (Phase 8) get their own, smaller
 # daily pool — separate from the resume-scan quota above — so rewriting a
 # bullet point doesn't eat into someone's daily analyze() count.
-AI_USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "20"))
+AI_USER_DAILY_LIMIT = int(os.getenv("AI_USER_DAILY_LIMIT", "5"))
 AI_PRO_DAILY_LIMIT = int(os.getenv("AI_PRO_DAILY_LIMIT", "200"))
 
 

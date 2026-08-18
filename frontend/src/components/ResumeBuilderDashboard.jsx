@@ -12,11 +12,14 @@ const TEMPLATE_LABELS = {
   minimal: 'Minimal',
 }
 
+const PRO_ONLY_TEMPLATES = new Set(['professional', 'executive', 'developer'])
+const FREE_RESUME_LIMIT = 2
+
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function NewResumeForm({ onCreate, onCancel }) {
+function NewResumeForm({ isPro, onCreate, onCancel }) {
   const [title, setTitle] = useState('')
   const [template, setTemplate] = useState('modern')
   const [saving, setSaving] = useState(false)
@@ -53,8 +56,9 @@ function NewResumeForm({ onCreate, onCancel }) {
           focus:outline-none focus:ring-2 focus:ring-redline/40 focus:border-redline"
       >
         {Object.entries(TEMPLATE_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
+          <option key={value} value={value} disabled={!isPro && PRO_ONLY_TEMPLATES.has(value)}>
             {label}
+            {!isPro && PRO_ONLY_TEMPLATES.has(value) ? ' (Pro)' : ''}
           </option>
         ))}
       </select>
@@ -140,7 +144,7 @@ function ResumeCard({ resume, onEdit, onRename, onDuplicate, onDelete }) {
 }
 
 export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
-  const { token, user, loading: authLoading } = useAuth()
+  const { token, user, isPro, loading: authLoading } = useAuth()
   const [resumes, setResumes] = useState(null)
   const [error, setError] = useState(null)
   const [showNewForm, setShowNewForm] = useState(false)
@@ -166,7 +170,10 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ title, template }),
     })
-    if (!res.ok) throw new Error('Could not create resume')
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || 'Could not create resume')
+    }
     const created = await res.json()
     setResumes((prev) => [
       { id: created.id, title: created.title, template: created.template, ats_score: created.ats_score, created_at: created.created_at, updated_at: created.updated_at },
@@ -196,7 +203,8 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) {
-      setError('Could not duplicate resume')
+      const data = await res.json().catch(() => ({}))
+      setError(data.detail || 'Could not duplicate resume')
       return
     }
     const created = await res.json()
@@ -231,14 +239,21 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
     )
   }
 
+  const atFreeLimit = !isPro && (resumes || []).length >= FREE_RESUME_LIMIT
+
   return (
     <div className="max-w-5xl mx-auto pb-16">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display text-2xl text-ink">My resumes</h2>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => (user ? setShowNewForm((v) => !v) : onRequireAuth())}
-            className="text-xs uppercase tracking-widest text-redline hover:underline"
+            onClick={() => {
+              if (!user) return onRequireAuth()
+              if (atFreeLimit) return
+              setShowNewForm((v) => !v)
+            }}
+            disabled={atFreeLimit}
+            className="text-xs uppercase tracking-widest text-redline hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
           >
             {showNewForm ? 'Close' : '+ Create resume'}
           </button>
@@ -258,11 +273,18 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
         </p>
       )}
 
+      {user && !isPro && (
+        <p className="text-xs text-slate mb-6">
+          {(resumes || []).length} of {FREE_RESUME_LIMIT} resumes used on the Free plan
+          {atFreeLimit && <span className="text-redline"> — upgrade to Pro for unlimited resumes and every template.</span>}
+        </p>
+      )}
+
       <p className="text-xs text-slate mb-6 max-w-md">
-        Build a resume section by section with a live preview. Templates and PDF download are coming in the next phases.
+        Build a resume section by section with a live preview, switch between 5 templates, and download a polished PDF.
       </p>
 
-      {showNewForm && <NewResumeForm onCreate={createResume} onCancel={() => setShowNewForm(false)} />}
+      {showNewForm && <NewResumeForm isPro={isPro} onCreate={createResume} onCancel={() => setShowNewForm(false)} />}
 
       {error && <p className="text-sm text-redline mb-4">{error}</p>}
 

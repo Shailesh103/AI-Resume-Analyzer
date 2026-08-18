@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY))
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isPro, setIsPro] = useState(false)
 
   const fetchMe = useCallback(async (t) => {
     try {
@@ -27,13 +28,29 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const fetchBillingStatus = useCallback(async (t) => {
+    try {
+      const res = await fetch(`${API_URL}/billing/status`, {
+        headers: { Authorization: `Bearer ${t}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setIsPro(!!data.is_pro)
+      }
+    } catch {
+      // non-fatal — falls back to treating the user as free tier
+    }
+  }, [])
+
   useEffect(() => {
     if (token) {
       fetchMe(token)
+      fetchBillingStatus(token)
     } else {
       setLoading(false)
+      setIsPro(false)
     }
-  }, [token, fetchMe])
+  }, [token, fetchMe, fetchBillingStatus])
 
   async function signup(email, password) {
     const res = await fetch(`${API_URL}/auth/register`, {
@@ -92,10 +109,23 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
+    setIsPro(false)
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, signup, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        loading,
+        isPro,
+        refreshBillingStatus: () => token && fetchBillingStatus(token),
+        login,
+        signup,
+        loginWithGoogle,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

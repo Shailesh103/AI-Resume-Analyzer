@@ -159,9 +159,8 @@ function UserMenu({ email, onSignOut }) {
 }
 
 function Header({ view, setView, onGoHome, requireAuth }) {
-  const { user, token, logout, loading } = useAuth()
+  const { user, token, isPro, logout, loading } = useAuth()
   const [scrolled, setScrolled] = useState(false)
-  const [isPro, setIsPro] = useState(false)
   const [billingLoading, setBillingLoading] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -172,17 +171,6 @@ function Header({ view, setView, onGoHome, requireAuth }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  useEffect(() => {
-    if (!token) {
-      setIsPro(false)
-      return
-    }
-    fetch(`${API_URL}/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => data && setIsPro(data.is_pro))
-      .catch(() => {})
-  }, [token])
 
   // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
   useEffect(() => {
@@ -327,7 +315,7 @@ function Header({ view, setView, onGoHome, requireAuth }) {
 
   return (
     <header
-      className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-12
+      className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-0
         transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(23,21,34,0.15)]' : 'border-transparent'}`}
     >
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between gap-4">
@@ -573,12 +561,14 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
 
 function BillingBanner() {
   const [message, setMessage] = useState(null)
+  const { refreshBillingStatus } = useAuth()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const billing = params.get('billing')
     if (billing === 'success') {
       setMessage({ type: 'success', text: "You're on Pro now — thanks for upgrading! 🎉" })
+      refreshBillingStatus()
     } else if (billing === 'cancel') {
       setMessage({ type: 'info', text: 'Checkout was cancelled — no charge was made.' })
     }
@@ -587,6 +577,7 @@ function BillingBanner() {
       const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '')
       window.history.replaceState({}, '', newUrl)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!message) return null
@@ -640,39 +631,48 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate overflow-hidden">
-      {/* Soft gradient-mesh wash behind the top of the page — purely decorative.
-          Tall enough to cover the hero (including the wider two-column layout),
-          and fades out smoothly at the bottom so there's no hard seam where it ends. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[900px] overflow-hidden -z-10"
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />
-        <div className="absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-forest/25 blur-[100px]" />
-        <div className="absolute -top-24 right-[-140px] w-[520px] h-[520px] rounded-full bg-redline/20 blur-[100px]" />
-        <div className="absolute top-44 left-1/2 -translate-x-1/2 w-[460px] h-[460px] rounded-full bg-gold/25 blur-[100px]" />
-        <div className="absolute top-[440px] right-[8%] w-[480px] h-[480px] rounded-full bg-redline/15 blur-[110px]" />
-        <div className="absolute top-[520px] left-[15%] w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
+    <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate">
+      <Header view={view} setView={setView} onGoHome={goHome} requireAuth={requireAuth} />
+
+      {/* Wraps the decorative wash + main content (not the header) so the oversized
+          wash gets clipped to the real content height without breaking the header's
+          sticky positioning — position: sticky stops working inside an overflow-hidden
+          ancestor, so Header must stay outside this wrapper. */}
+      <div className="relative isolate overflow-hidden flex-1 flex flex-col">
+        {/* Soft gradient-mesh wash behind the top of the page — purely decorative.
+            Tall enough to cover the hero (including the wider two-column layout),
+            and fades out smoothly at the bottom so there's no hard seam where it ends. */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[900px] overflow-hidden -z-10"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />
+          <div className="absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full bg-forest/25 blur-[100px]" />
+          <div className="absolute -top-24 right-[-140px] w-[520px] h-[520px] rounded-full bg-redline/20 blur-[100px]" />
+          <div className="absolute top-44 left-1/2 -translate-x-1/2 w-[460px] h-[460px] rounded-full bg-gold/25 blur-[100px]" />
+          <div className="absolute top-[440px] right-[8%] w-[480px] h-[480px] rounded-full bg-redline/15 blur-[110px]" />
+          <div className="absolute top-[520px] left-[15%] w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
+        </div>
+
+        {/* <main className="px-4 flex-1"> */}
+          <main className="px-4 pt-14 flex-1">
+          <BillingBanner />
+          <MainContent
+            view={view}
+            setView={setView}
+            homeSignal={homeSignal}
+            requireAuth={requireAuth}
+            requireAuthForCheckout={requireAuthForCheckout}
+            pendingCheckout={pendingCheckout}
+            clearPendingCheckout={() => setPendingCheckout(false)}
+            onAuthDone={handleAuthDone}
+          />
+        </main>
       </div>
 
-      <Header view={view} setView={setView} onGoHome={goHome} requireAuth={requireAuth} />
-      <main className="px-4 flex-1">
-        <BillingBanner />
-        <MainContent
-          view={view}
-          setView={setView}
-          homeSignal={homeSignal}
-          requireAuth={requireAuth}
-          requireAuthForCheckout={requireAuthForCheckout}
-          pendingCheckout={pendingCheckout}
-          clearPendingCheckout={() => setPendingCheckout(false)}
-          onAuthDone={handleAuthDone}
-        />
-      </main>
       <Footer setView={setView} onGoHome={goHome} />
     </div>
   )
