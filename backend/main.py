@@ -36,10 +36,13 @@ from app.models_db import Analysis, Job, Resume, User
 from app.parser import extract_text
 from app.rate_limit import check_ai_rate_limit, check_rate_limit, get_usage_status, log_ai_usage, log_usage
 from app.ai_assist import get_ai_suggestion
+from app.ats_check import run_ats_check
+from app.job_optimizer import optimize_for_job
 from app.pdf_generator import build_resume_pdf
 from app.schemas import (
     AIAssistRequest,
     AIAssistResponse,
+    ATSCheckResponse,
     AnalyzeResponse,
     BillingStatus,
     CheckoutSessionResponse,
@@ -51,6 +54,8 @@ from app.schemas import (
     JobCreate,
     JobOut,
     JobUpdate,
+    OptimizeForJobRequest,
+    OptimizeForJobResponse,
     ResumeCreate,
     ResumeData,
     ResumeListItem,
@@ -551,6 +556,43 @@ def ai_assist(
     suggestion = get_ai_suggestion(payload.action, payload.text, payload.context)
     log_ai_usage(db, request, current_user.id)
     return AIAssistResponse(original=payload.text, suggestion=suggestion)
+
+
+@app.get("/resumes/{resume_id}/ats-check", response_model=ATSCheckResponse)
+def ats_check(
+    resume_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    """Rule-based ATS compatibility check — deterministic, no AI call, no rate limit."""
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    result = run_ats_check(
+        resume_data=json.loads(resume.resume_data),
+        section_order=json.loads(resume.section_order),
+    )
+    return ATSCheckResponse(**result)
+
+
+@app.post("/resumes/{resume_id}/optimize-for-job", response_model=OptimizeForJobResponse)
+def optimize_resume_for_job(
+    resume_id: str,
+    payload: OptimizeForJobRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    resume = db.query(Resume).filter(Resume.id == resume_id, Resume.user_id == current_user.id).first()
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    check_ai_rate_limit(db, request, current_user.id, is_pro=is_pro_user(current_user))
+    result = optimize_for_job(
+        resume_data=json.loads(resume.resume_data),
+        job_description=payload.job_description,
+    )
+    log_ai_usage(db, request, current_user.id)
+    return OptimizeForJobResponse(**result)
 
 
 # ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import {
   CustomSectionsSection,
 } from './BuilderSections'
 import ResumeRenderer from './ResumeRenderer'
+import AtsPanel from './AtsPanel'
 import { TEMPLATE_LIST } from './templates/index'
 import { SECTION_TITLES } from './BuilderPreview'
 
@@ -59,6 +60,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [saveStatus, setSaveStatus] = useState('idle') // idle | saving | saved
+  const [saveCount, setSaveCount] = useState(0)
   const [showPreview, setShowPreview] = useState(false) // mobile toggle
   const [activeKey, setActiveKey] = useState('personalInfo')
   const [downloading, setDownloading] = useState(false)
@@ -95,6 +97,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
           body: JSON.stringify({ title: nextTitle, template: nextTemplate, resume_data: nextData, section_order: nextOrder }),
         })
         setSaveStatus('saved')
+        setSaveCount((n) => n + 1)
       } catch {
         setSaveStatus('idle')
       }
@@ -261,6 +264,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
 
         <div className="sticky top-24">
           <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
+          <AtsPanel resumeId={resumeId} refreshSignal={saveCount} />
         </div>
       </div>
 
@@ -289,7 +293,10 @@ export default function BuilderEditor({ resumeId, onBack }) {
         )}
 
         {showPreview ? (
-          <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
+          <>
+            <ResumeRenderer template={template} resumeData={resumeData} sectionOrder={sectionOrder} />
+            <AtsPanel resumeId={resumeId} refreshSignal={saveCount} />
+          </>
         ) : (
           <>
             <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />

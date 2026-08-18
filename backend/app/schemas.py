@@ -310,3 +310,26 @@ class AIAssistRequest(BaseModel):
 class AIAssistResponse(BaseModel):
     original: str
     suggestion: str
+
+
+# --- ATS check + job optimization (Phase 9) ---
+
+class ATSCheckItem(BaseModel):
+    label: str
+    passed: bool
+    detail: str
+
+
+class ATSCheckResponse(BaseModel):
+    score: int
+    checks: List[ATSCheckItem]
+
+
+class OptimizeForJobRequest(BaseModel):
+    job_description: str
+
+
+class OptimizeForJobResponse(BaseModel):
+    matched_keywords: List[str]
+    missing_keywords: List[str]
+    suggestions: List[str]
