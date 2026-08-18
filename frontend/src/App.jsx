@@ -29,6 +29,64 @@ function NavLink({ active, onClick, children }) {
   )
 }
 
+function NavDropdown({ label, items }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1 text-xs uppercase tracking-widest transition-colors ${
+          open ? 'text-redline' : 'text-slate hover:text-redline'
+        }`}
+      >
+        {label}
+        <svg
+          viewBox="0 0 24 24"
+          className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute left-0 top-full mt-3 w-52 bg-manuscript border border-line rounded-md
+            shadow-[0_20px_45px_-15px_rgba(23,21,34,0.4)] overflow-hidden z-30 animate-fade-up py-1"
+        >
+          <div className="absolute -top-1.5 left-4 w-3 h-3 bg-manuscript border-t border-l border-line rotate-45" />
+          {items.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => {
+                setOpen(false)
+                item.onClick()
+              }}
+              className="relative w-full text-left px-4 py-2.5 text-sm text-ink hover:text-redline hover:bg-white/50 transition-colors"
+            >
+              <span className="block">{item.label}</span>
+              {item.hint && <span className="block text-[11px] text-slate mt-0.5">{item.hint}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function UserMenu({ email, onSignOut }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
@@ -100,7 +158,7 @@ function UserMenu({ email, onSignOut }) {
   )
 }
 
-function Header({ view, setView, onGoHome }) {
+function Header({ view, setView, onGoHome, requireAuth }) {
   const { user, token, logout, loading } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [isPro, setIsPro] = useState(false)
@@ -183,13 +241,30 @@ function Header({ view, setView, onGoHome }) {
     }
   }
 
+  function goToPricing() {
+    setView('analyze')
+    // A short delay lets the analyze view (and its Pricing section) mount first.
+    setTimeout(() => {
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+  }
+
+  function handleGetStarted() {
+    setView('resumes')
+  }
+
   const navLinks = (
     <>
-      <NavLink active={view === 'jobs'} onClick={() => setView('jobs')}>
-        Jobs
-      </NavLink>
-      <NavLink active={view === 'resumes'} onClick={() => setView('resumes')}>
-        Builder
+      <NavDropdown
+        label="Resume"
+        items={[{ label: 'Resume Builder', hint: 'Build a new resume', onClick: () => setView('resumes') }]}
+      />
+      <NavDropdown
+        label="Tools"
+        items={[{ label: 'Job Tracker', hint: 'Track your applications', onClick: () => setView('jobs') }]}
+      />
+      <NavLink active={false} onClick={goToPricing}>
+        Pricing
       </NavLink>
       <NavLink active={view === 'history'} onClick={() => setView('history')}>
         History
@@ -231,28 +306,44 @@ function Header({ view, setView, onGoHome }) {
     </>
   )
 
+  const guestButtons = !loading && !user && (
+    <>
+      <button
+        onClick={() => requireAuth('analyze')}
+        className="text-xs uppercase tracking-widest border border-line rounded-full px-4 py-2
+          text-ink hover:border-redline hover:text-redline transition-colors shrink-0"
+      >
+        Sign in
+      </button>
+      <button
+        onClick={handleGetStarted}
+        className="text-xs uppercase tracking-widest bg-redline text-manuscript rounded-full px-4 py-2
+          hover:bg-redline/90 transition-colors shrink-0"
+      >
+        Get started
+      </button>
+    </>
+  )
+
   return (
     <header
       className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-12
         transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(23,21,34,0.15)]' : 'border-transparent'}`}
     >
-      <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-4">
-        <button onClick={onGoHome} className="font-display text-2xl text-ink shrink-0">
-          Redline<span className="text-redline">.</span>
-        </button>
+      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-8 min-w-0">
+          <button onClick={onGoHome} className="font-display text-2xl text-ink shrink-0">
+            Redline<span className="text-redline">.</span>
+          </button>
 
-        {/* Desktop nav */}
-        <div className="hidden sm:flex items-center gap-5 min-w-0">
-          {navLinks}
+          {/* Desktop nav links */}
+          <div className="hidden sm:flex items-center gap-6 min-w-0">{navLinks}</div>
+        </div>
+
+        {/* Desktop right side: account controls or guest CTAs */}
+        <div className="hidden sm:flex items-center gap-4 shrink-0">
           {accountItems}
-          {!loading && !user && (
-            <button
-              onClick={() => setView('auth')}
-              className="text-xs uppercase tracking-widest text-slate hover:text-redline"
-            >
-              Sign in
-            </button>
-          )}
+          {guestButtons}
         </div>
 
         {/* Mobile hamburger */}
@@ -278,14 +369,7 @@ function Header({ view, setView, onGoHome }) {
         <div className="sm:hidden max-w-4xl mx-auto px-4 pt-4 flex flex-col gap-4 animate-fade-up">
           {navLinks}
           {accountItems}
-          {!loading && !user && (
-            <button
-              onClick={() => setView('auth')}
-              className="text-xs uppercase tracking-widest text-slate hover:text-redline text-left"
-            >
-              Sign in
-            </button>
-          )}
+          {guestButtons}
         </div>
       )}
     </header>
@@ -313,7 +397,7 @@ function UsageIndicator({ usage }) {
   )
 }
 
-function MainContent({ view, setView, homeSignal, requireAuth, onAuthDone }) {
+function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForCheckout, pendingCheckout, clearPendingCheckout, onAuthDone }) {
   const { token } = useAuth()
   const [result, setResult] = useState(null)
   const [editing, setEditing] = useState(false)
@@ -382,7 +466,7 @@ function MainContent({ view, setView, homeSignal, requireAuth, onAuthDone }) {
 
   async function handleUpgrade() {
     if (!token) {
-      setView('auth')
+      requireAuthForCheckout()
       return
     }
     try {
@@ -398,6 +482,17 @@ function MainContent({ view, setView, homeSignal, requireAuth, onAuthDone }) {
       // silently fail — the Header's own Upgrade button is a reliable fallback
     }
   }
+
+  // If a guest clicked "Upgrade" and just finished signing in, fire the checkout
+  // automatically once they're back on the home view — this is what makes
+  // "sign in, then straight to billing" actually happen.
+  useEffect(() => {
+    if (pendingCheckout && token && view === 'analyze') {
+      clearPendingCheckout()
+      handleUpgrade()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCheckout, token, view])
 
   if (view === 'auth') {
     return <AuthForm onDone={onAuthDone} />
@@ -513,6 +608,7 @@ function AppShell() {
   const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
   const [homeSignal, setHomeSignal] = useState(0)
   const [postAuthView, setPostAuthView] = useState('analyze')
+  const [pendingCheckout, setPendingCheckout] = useState(false)
 
   // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
   useEffect(() => {
@@ -527,6 +623,14 @@ function AppShell() {
   // Send a guest to sign in, remembering which page to return them to once they're in.
   function requireAuth(fromView) {
     setPostAuthView(fromView)
+    setView('auth')
+  }
+
+  // Same idea, but for "Upgrade to Pro" — after signing in, go straight to
+  // Stripe checkout instead of landing on any particular page.
+  function requireAuthForCheckout() {
+    setPostAuthView('analyze')
+    setPendingCheckout(true)
     setView('auth')
   }
 
@@ -555,7 +659,7 @@ function AppShell() {
         <div className="absolute top-[520px] left-[15%] w-[420px] h-[420px] rounded-full bg-forest/15 blur-[110px]" />
       </div>
 
-      <Header view={view} setView={setView} onGoHome={goHome} />
+      <Header view={view} setView={setView} onGoHome={goHome} requireAuth={requireAuth} />
       <main className="px-4 flex-1">
         <BillingBanner />
         <MainContent
@@ -563,6 +667,9 @@ function AppShell() {
           setView={setView}
           homeSignal={homeSignal}
           requireAuth={requireAuth}
+          requireAuthForCheckout={requireAuthForCheckout}
+          pendingCheckout={pendingCheckout}
+          clearPendingCheckout={() => setPendingCheckout(false)}
           onAuthDone={handleAuthDone}
         />
       </main>
