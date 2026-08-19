@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import UploadForm from './components/UploadForm'
-import HeroVisual from './components/HeroVisual'
-import ResumeBuilderDashboard from './components/ResumeBuilderDashboard'
-import ResultsDashboard from './components/ResultsDashboard'
-import AuthForm from './components/AuthForm'
-import HistoryList from './components/HistoryList'
-import ResumeEditor from './components/ResumeEditor'
-import JobTracker from './components/JobTracker'
-import LandingSections from './components/LandingSections'
-import Footer from './components/Footer'
-import { PrivacyPolicy, TermsOfService } from './components/LegalPages'
+import { useState, useEffect, useCallback, useRef } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import UploadForm from "./components/UploadForm";
+import HeroVisual from "./components/HeroVisual";
+import ResumeBuilderDashboard from "./components/ResumeBuilderDashboard";
+import ResultsDashboard from "./components/ResultsDashboard";
+import AuthForm from "./components/AuthForm";
+import HistoryList from "./components/HistoryList";
+import ResumeEditor from "./components/ResumeEditor";
+import JobTracker from "./components/JobTracker";
+import LandingSections from "./components/LandingSections";
+import Footer from "./components/Footer";
+import { PrivacyPolicy, TermsOfService } from "./components/LegalPages";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 function NavLink({ active, onClick, children }) {
   return (
@@ -20,40 +20,42 @@ function NavLink({ active, onClick, children }) {
       onClick={onClick}
       className={`text-xs uppercase tracking-widest pb-0.5 border-b-2 transition-colors text-left w-fit ${
         active
-          ? 'text-redline border-redline'
-          : 'text-slate border-transparent hover:text-redline hover:border-redline/40'
+          ? "text-redline border-redline"
+          : // : 'text-slate border-transparent hover:text-redline hover:border-redline/40'
+            "text-manuscript/80 border-transparent hover:text-redline hover:border-redline/40"
       }`}
     >
       {children}
     </button>
-  )
+  );
 }
 
 function NavDropdown({ label, items }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [open])
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1 text-xs uppercase tracking-widest transition-colors ${
-          open ? 'text-redline' : 'text-slate hover:text-redline'
+          // open ? 'text-redline' : 'text-slate hover:text-redline'
+          open ? "text-redline" : "text-manuscript/80 hover:text-redline"
         }`}
       >
         {label}
         <svg
           viewBox="0 0 24 24"
-          className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="2.5"
@@ -72,48 +74,61 @@ function NavDropdown({ label, items }) {
             <button
               key={item.label}
               onClick={() => {
-                setOpen(false)
-                item.onClick()
+                setOpen(false);
+                item.onClick();
               }}
               className="relative w-full text-left px-4 py-2.5 text-sm text-ink hover:text-redline hover:bg-white/50 transition-colors"
             >
               <span className="block">{item.label}</span>
-              {item.hint && <span className="block text-[11px] text-slate mt-0.5">{item.hint}</span>}
+              {item.hint && (
+                <span className="block text-[11px] text-slate mt-0.5">
+                  {item.hint}
+                </span>
+              )}
             </button>
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function UserMenu({ email, onSignOut }) {
-  const [open, setOpen] = useState(false)
-  const menuRef = useRef(null)
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
 
   // Close the dropdown on outside click.
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     function onClickOutside(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false)
+        setOpen(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [open])
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   return (
     <div className="relative shrink-0" ref={menuRef}>
       <button
         onClick={() => setOpen((v) => !v)}
         className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
-          open ? 'border-redline text-redline' : 'border-line text-slate hover:border-redline/50 hover:text-redline'
+          // open
+          //   ? "border-redline text-redline"
+            // : "border-line text-slate hover:border-redline/50 hover:text-redline"
+              open ? 'border-redline text-redline' : 'border-manuscript/40 text-manuscript hover:border-redline/50 hover:text-redline'
         }`}
         aria-label="Account menu"
         aria-expanded={open}
       >
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          viewBox="0 0 24 24"
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <circle cx="12" cy="8" r="3.5" />
           <path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5" />
         </svg>
@@ -129,7 +144,13 @@ function UserMenu({ email, onSignOut }) {
 
           <div className="relative flex items-center gap-2.5 px-4 py-3 bg-white/40 border-b border-line">
             <div className="w-7 h-7 rounded-full border border-line flex items-center justify-center text-slate shrink-0">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                className="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="8" r="3.5" />
                 <path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5" />
               </svg>
@@ -139,13 +160,19 @@ function UserMenu({ email, onSignOut }) {
 
           <button
             onClick={() => {
-              setOpen(false)
-              onSignOut()
+              setOpen(false);
+              onSignOut();
             }}
             className="relative w-full flex items-center gap-2.5 text-left px-4 py-3 text-xs uppercase
               tracking-widest text-redline hover:bg-redline/5 transition-colors"
           >
-            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-3.5 h-3.5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4" />
               <path d="M16 17l5-5-5-5" />
               <path d="M21 12H9" />
@@ -155,110 +182,124 @@ function UserMenu({ email, onSignOut }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function Header({ view, setView, onGoHome, requireAuth }) {
-  const { user, token, isPro, logout, loading } = useAuth()
-  const [scrolled, setScrolled] = useState(false)
-  const [billingLoading, setBillingLoading] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const { user, token, isPro, logout, loading } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     function onScroll() {
-      setScrolled(window.scrollY > 4)
+      setScrolled(window.scrollY > 4);
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Close the mobile menu whenever the view changes, so it doesn't stay open underneath.
   useEffect(() => {
-    setMobileOpen(false)
-  }, [view])
+    setMobileOpen(false);
+  }, [view]);
 
   // Close the mobile menu if the user scrolls while it's open.
   // (The listener is attached a tick late, and needs a small movement threshold,
   // so the layout-shift scroll caused by the menu opening itself doesn't
   // immediately close it.)
   useEffect(() => {
-    if (!mobileOpen) return
-    const startY = window.scrollY
+    if (!mobileOpen) return;
+    const startY = window.scrollY;
     function onMenuScroll() {
       if (Math.abs(window.scrollY - startY) > 10) {
-        setMobileOpen(false)
+        setMobileOpen(false);
       }
     }
     const timerId = setTimeout(() => {
-      window.addEventListener('scroll', onMenuScroll, { passive: true })
-    }, 150)
+      window.addEventListener("scroll", onMenuScroll, { passive: true });
+    }, 150);
     return () => {
-      clearTimeout(timerId)
-      window.removeEventListener('scroll', onMenuScroll)
-    }
-  }, [mobileOpen])
+      clearTimeout(timerId);
+      window.removeEventListener("scroll", onMenuScroll);
+    };
+  }, [mobileOpen]);
 
   async function handleUpgrade() {
-    setBillingLoading(true)
+    setBillingLoading(true);
     try {
       const res = await fetch(`${API_URL}/billing/checkout`, {
-        method: 'POST',
+        method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (res.ok && data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } finally {
-      setBillingLoading(false)
+      setBillingLoading(false);
     }
   }
 
   async function handleManageBilling() {
-    setBillingLoading(true)
+    setBillingLoading(true);
     try {
       const res = await fetch(`${API_URL}/billing/portal`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (res.ok && data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } finally {
-      setBillingLoading(false)
+      setBillingLoading(false);
     }
   }
 
   function goToPricing() {
-    setView('analyze')
+    setView("analyze");
     // A short delay lets the analyze view (and its Pricing section) mount first.
     setTimeout(() => {
-      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 150)
+      document
+        .getElementById("pricing")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
   }
 
   function handleGetStarted() {
-    setView('resumes')
+    setView("resumes");
   }
 
   const navLinks = (
     <>
       <NavDropdown
         label="Resume"
-        items={[{ label: 'Resume Builder', hint: 'Build a new resume', onClick: () => setView('resumes') }]}
+        items={[
+          {
+            label: "Resume Builder",
+            hint: "Build a new resume",
+            onClick: () => setView("resumes"),
+          },
+        ]}
       />
       <NavDropdown
         label="Tools"
-        items={[{ label: 'Job Tracker', hint: 'Track your applications', onClick: () => setView('jobs') }]}
+        items={[
+          {
+            label: "Job Tracker",
+            hint: "Track your applications",
+            onClick: () => setView("jobs"),
+          },
+        ]}
       />
       <NavLink active={false} onClick={goToPricing}>
         Pricing
       </NavLink>
-      <NavLink active={view === 'history'} onClick={() => setView('history')}>
+      <NavLink active={view === "history"} onClick={() => setView("history")}>
         History
       </NavLink>
     </>
-  )
+  );
 
   const accountItems = !loading && user && (
     <>
@@ -270,7 +311,8 @@ function Header({ view, setView, onGoHome, requireAuth }) {
           <button
             onClick={handleManageBilling}
             disabled={billingLoading}
-            className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 disabled:opacity-40 text-left"
+            // className="text-xs uppercase tracking-widest text-slate hover:text-redline shrink-0 disabled:opacity-40 text-left"
+            className="text-xs uppercase tracking-widest text-manuscript/80 hover:text-redline shrink-0 disabled:opacity-40 text-left"
           >
             Manage billing
           </button>
@@ -281,25 +323,27 @@ function Header({ view, setView, onGoHome, requireAuth }) {
           disabled={billingLoading}
           className="text-xs uppercase tracking-widest text-redline hover:underline shrink-0 disabled:opacity-40 text-left"
         >
-          {billingLoading ? 'Loading…' : 'Upgrade'}
+          {billingLoading ? "Loading…" : "Upgrade"}
         </button>
       )}
       <UserMenu
         email={user.email}
         onSignOut={() => {
-          logout()
-          setView('analyze')
+          logout();
+          setView("analyze");
         }}
       />
     </>
-  )
+  );
 
   const guestButtons = !loading && !user && (
     <>
       <button
-        onClick={() => requireAuth('analyze')}
-        className="text-xs uppercase tracking-widest border border-line rounded-full px-4 py-2
-          text-ink hover:border-redline hover:text-redline transition-colors shrink-0"
+        onClick={() => requireAuth("analyze")}
+        // className="text-xs uppercase tracking-widest border border-line rounded-full px-4 py-2
+        //   text-ink hover:border-redline hover:text-redline transition-colors shrink-0"
+        className="text-xs uppercase tracking-widest border border-manuscript/30 rounded-full px-4 py-2
+  text-manuscript hover:border-redline hover:text-redline transition-colors shrink-0"
       >
         Sign in
       </button>
@@ -311,21 +355,28 @@ function Header({ view, setView, onGoHome, requireAuth }) {
         Get started
       </button>
     </>
-  )
+  );
 
   return (
     <header
-      className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-0
-        transition-shadow ${scrolled ? 'border-line shadow-[0_2px_10px_-4px_rgba(23,21,34,0.15)]' : 'border-transparent'}`}
+      // className={`sticky top-0 z-20 bg-manuscript/90 backdrop-blur-sm border-b py-5 mb-0
+      className={`sticky top-0 z-20 bg-ink border-b border-ink py-5 mb-0
+        transition-shadow ${scrolled ? "border-line shadow-[0_2px_10px_-4px_rgba(23,21,34,0.15)]" : "border-transparent"}`}
     >
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-8 min-w-0">
-          <button onClick={onGoHome} className="font-display text-2xl text-ink shrink-0">
+          {/* <button onClick={onGoHome} className="font-display text-2xl text-ink shrink-0"> */}
+          <button
+            onClick={onGoHome}
+            className="font-display text-2xl text-manuscript shrink-0"
+          >
             Redline<span className="text-redline">.</span>
           </button>
 
           {/* Desktop nav links */}
-          <div className="hidden sm:flex items-center gap-6 min-w-0">{navLinks}</div>
+          <div className="hidden sm:flex items-center gap-6 min-w-0">
+            {navLinks}
+          </div>
         </div>
 
         {/* Desktop right side: account controls or guest CTAs */}
@@ -342,11 +393,14 @@ function Header({ view, setView, onGoHome, requireAuth }) {
         >
           <div className="w-5 space-y-1.5">
             <span
-              className={`block h-[1.5px] bg-ink transition-transform ${mobileOpen ? 'translate-y-[6.5px] rotate-45' : ''}`}
+              // bg-ink   se ->  bg-manuscript
+              className={`block h-[1.5px] bg-manuscript transition-transform ${mobileOpen ? "translate-y-[6.5px] rotate-45" : ""}`}
             />
-            <span className={`block h-[1.5px] bg-ink transition-opacity ${mobileOpen ? 'opacity-0' : ''}`} />
             <span
-              className={`block h-[1.5px] bg-ink transition-transform ${mobileOpen ? '-translate-y-[6.5px] -rotate-45' : ''}`}
+              className={`block h-[1.5px] bg-manuscript transition-opacity ${mobileOpen ? "opacity-0" : ""}`}
+            />
+            <span
+              className={`block h-[1.5px] bg-manuscript transition-transform ${mobileOpen ? "-translate-y-[6.5px] -rotate-45" : ""}`}
             />
           </div>
         </button>
@@ -361,110 +415,119 @@ function Header({ view, setView, onGoHome, requireAuth }) {
         </div>
       )}
     </header>
-  )
+  );
 }
 
 function UsageIndicator({ usage }) {
-  if (!usage) return null
+  if (!usage) return null;
 
-  const isLow = usage.remaining <= 1
-  const isZero = usage.remaining === 0
+  const isLow = usage.remaining <= 1;
+  const isZero = usage.remaining === 0;
 
   return (
     <p
       className={`text-xs text-center mt-4 ${
-        isZero ? 'text-redline' : isLow ? 'text-gold' : 'text-slate'
+        isZero ? "text-redline" : isLow ? "text-gold" : "text-slate"
       }`}
     >
       {isZero
         ? "You've used all your scans for today."
-        : `${usage.remaining} scan${usage.remaining === 1 ? '' : 's'} left today`}
-      {' · '}
-      {usage.limit} per day{usage.used > 0 ? ` (${usage.used} used)` : ''}
+        : `${usage.remaining} scan${usage.remaining === 1 ? "" : "s"} left today`}
+      {" · "}
+      {usage.limit} per day{usage.used > 0 ? ` (${usage.used} used)` : ""}
     </p>
-  )
+  );
 }
 
-function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForCheckout, pendingCheckout, clearPendingCheckout, onAuthDone }) {
-  const { token } = useAuth()
-  const [result, setResult] = useState(null)
-  const [editing, setEditing] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [usage, setUsage] = useState(null)
+function MainContent({
+  view,
+  setView,
+  homeSignal,
+  requireAuth,
+  requireAuthForCheckout,
+  pendingCheckout,
+  clearPendingCheckout,
+  onAuthDone,
+}) {
+  const { token } = useAuth();
+  const [result, setResult] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [usage, setUsage] = useState(null);
 
   // The header logo can be clicked from any nested state (results shown, editor
   // open, etc.) — this always forces a full reset back to the true landing page.
   useEffect(() => {
-    if (homeSignal === 0) return
-    setResult(null)
-    setEditing(false)
-    setError(null)
-  }, [homeSignal])
+    if (homeSignal === 0) return;
+    setResult(null);
+    setEditing(false);
+    setError(null);
+  }, [homeSignal]);
 
   const refreshUsage = useCallback(async () => {
     try {
-      const headers = {}
-      if (token) headers.Authorization = `Bearer ${token}`
-      const res = await fetch(`${API_URL}/usage`, { headers })
-      if (res.ok) setUsage(await res.json())
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${API_URL}/usage`, { headers });
+      if (res.ok) setUsage(await res.json());
     } catch {
       // Non-critical — the analyze call will still enforce the real limit server-side.
     }
-  }, [token])
+  }, [token]);
 
   useEffect(() => {
-    refreshUsage()
-  }, [refreshUsage])
+    refreshUsage();
+  }, [refreshUsage]);
 
   async function handleAnalyze(file, jobDescription) {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
-    const formData = new FormData()
-    formData.append('resume', file)
+    const formData = new FormData();
+    formData.append("resume", file);
     if (jobDescription?.trim()) {
-      formData.append('job_description', jobDescription)
+      formData.append("job_description", jobDescription);
     }
 
     try {
-      const headers = {}
-      if (token) headers.Authorization = `Bearer ${token}`
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
 
       const res = await fetch(`${API_URL}/analyze`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: formData,
-      })
+      });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.detail || `Request failed (${res.status})`)
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || `Request failed (${res.status})`);
       }
 
-      const data = await res.json()
-      setResult(data)
-      refreshUsage()
+      const data = await res.json();
+      setResult(data);
+      refreshUsage();
     } catch (e) {
-      setError(e.message || 'Something went wrong. Please try again.')
+      setError(e.message || "Something went wrong. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleUpgrade() {
     if (!token) {
-      requireAuthForCheckout()
-      return
+      requireAuthForCheckout();
+      return;
     }
     try {
       const res = await fetch(`${API_URL}/billing/checkout`, {
-        method: 'POST',
+        method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (res.ok && data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } catch {
       // silently fail — the Header's own Upgrade button is a reliable fallback
@@ -475,34 +538,49 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
   // automatically once they're back on the home view — this is what makes
   // "sign in, then straight to billing" actually happen.
   useEffect(() => {
-    if (pendingCheckout && token && view === 'analyze') {
-      clearPendingCheckout()
-      handleUpgrade()
+    if (pendingCheckout && token && view === "analyze") {
+      clearPendingCheckout();
+      handleUpgrade();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingCheckout, token, view])
+  }, [pendingCheckout, token, view]);
 
-  if (view === 'auth') {
-    return <AuthForm onDone={onAuthDone} />
+  if (view === "auth") {
+    return <AuthForm onDone={onAuthDone} />;
   }
 
-  if (view === 'history') {
-    return <HistoryList onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('history')} />
+  if (view === "history") {
+    return (
+      <HistoryList
+        onBack={() => setView("analyze")}
+        onRequireAuth={() => requireAuth("history")}
+      />
+    );
   }
 
-  if (view === 'jobs') {
-    return <JobTracker onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('jobs')} />
+  if (view === "jobs") {
+    return (
+      <JobTracker
+        onBack={() => setView("analyze")}
+        onRequireAuth={() => requireAuth("jobs")}
+      />
+    );
   }
-  if (view === 'resumes') {
-    return <ResumeBuilderDashboard onBack={() => setView('analyze')} onRequireAuth={() => requireAuth('resumes')} />
+  if (view === "resumes") {
+    return (
+      <ResumeBuilderDashboard
+        onBack={() => setView("analyze")}
+        onRequireAuth={() => requireAuth("resumes")}
+      />
+    );
   }
 
-  if (view === 'privacy') {
-    return <PrivacyPolicy onBack={() => setView('analyze')} />
+  if (view === "privacy") {
+    return <PrivacyPolicy onBack={() => setView("analyze")} />;
   }
 
-  if (view === 'terms') {
-    return <TermsOfService onBack={() => setView('analyze')} />
+  if (view === "terms") {
+    return <TermsOfService onBack={() => setView("analyze")} />;
   }
 
   if (result && editing) {
@@ -513,7 +591,7 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
         filename={result.filename}
         onBack={() => setEditing(false)}
       />
-    )
+    );
   }
 
   if (result) {
@@ -523,7 +601,7 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
         onReset={() => setResult(null)}
         onBuildResume={() => setEditing(true)}
       />
-    )
+    );
   }
 
   return (
@@ -532,22 +610,30 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
         <div>
           <div className="max-w-2xl mx-auto lg:mx-0 text-center lg:text-left mb-8">
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-ink leading-tight">
-              Get your resume <span className="italic">marked up</span> like a recruiter would.
+              Get your resume <span className="italic">marked up</span> like a
+              recruiter would.
             </h2>
             <p className="text-slate mt-3">
-              Upload once, get an ATS score, a red-pen edit of your weakest bullets,
-              and the keywords you're missing.
+              Upload once, get an ATS score, a red-pen edit of your weakest
+              bullets, and the keywords you're missing.
             </p>
             {!token && (
               <p className="text-xs text-slate mt-3">
-                <button onClick={() => setView('auth')} className="underline underline-offset-4 hover:text-redline">
+                <button
+                  onClick={() => setView("auth")}
+                  className="underline underline-offset-4 hover:text-redline"
+                >
                   Sign in
-                </button>{' '}
+                </button>{" "}
                 to save your results and track your score over time.
               </p>
             )}
           </div>
-          <UploadForm onAnalyze={handleAnalyze} loading={loading} error={error} />
+          <UploadForm
+            onAnalyze={handleAnalyze}
+            loading={loading}
+            error={error}
+          />
         </div>
         <div className="hidden lg:flex justify-center">
           <HeroVisual />
@@ -556,83 +642,95 @@ function MainContent({ view, setView, homeSignal, requireAuth, requireAuthForChe
       <UsageIndicator usage={usage} />
       <LandingSections onUpgrade={handleUpgrade} />
     </>
-  )
+  );
 }
 
 function BillingBanner() {
-  const [message, setMessage] = useState(null)
-  const { refreshBillingStatus } = useAuth()
+  const [message, setMessage] = useState(null);
+  const { refreshBillingStatus } = useAuth();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const billing = params.get('billing')
-    if (billing === 'success') {
-      setMessage({ type: 'success', text: "You're on Pro now — thanks for upgrading! 🎉" })
-      refreshBillingStatus()
-    } else if (billing === 'cancel') {
-      setMessage({ type: 'info', text: 'Checkout was cancelled — no charge was made.' })
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get("billing");
+    if (billing === "success") {
+      setMessage({
+        type: "success",
+        text: "You're on Pro now — thanks for upgrading! 🎉",
+      });
+      refreshBillingStatus();
+    } else if (billing === "cancel") {
+      setMessage({
+        type: "info",
+        text: "Checkout was cancelled — no charge was made.",
+      });
     }
     if (billing) {
-      params.delete('billing')
-      const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '')
-      window.history.replaceState({}, '', newUrl)
+      params.delete("billing");
+      const newUrl =
+        window.location.pathname + (params.toString() ? `?${params}` : "");
+      window.history.replaceState({}, "", newUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
-  if (!message) return null
+  if (!message) return null;
 
   return (
     <div
       className={`max-w-4xl mx-auto mb-6 px-4 py-3 rounded-sm text-sm border ${
-        message.type === 'success'
-          ? 'border-slate/40 bg-slate/5 text-ink'
-          : 'border-line bg-white/50 text-slate'
+        message.type === "success"
+          ? "border-slate/40 bg-slate/5 text-ink"
+          : "border-line bg-white/50 text-slate"
       }`}
     >
       {message.text}
     </div>
-  )
+  );
 }
 
 function AppShell() {
-  const [view, setView] = useState('analyze') // 'analyze' | 'auth' | 'history'
-  const [homeSignal, setHomeSignal] = useState(0)
-  const [postAuthView, setPostAuthView] = useState('analyze')
-  const [pendingCheckout, setPendingCheckout] = useState(false)
+  const [view, setView] = useState("analyze"); // 'analyze' | 'auth' | 'history'
+  const [homeSignal, setHomeSignal] = useState(0);
+  const [postAuthView, setPostAuthView] = useState("analyze");
+  const [pendingCheckout, setPendingCheckout] = useState(false);
 
   // Scroll to the top of the page whenever the view changes (Jobs, History, etc.)
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [view])
+    window.scrollTo(0, 0);
+  }, [view]);
 
   function goHome() {
-    setView('analyze')
-    setHomeSignal((n) => n + 1)
+    setView("analyze");
+    setHomeSignal((n) => n + 1);
   }
 
   // Send a guest to sign in, remembering which page to return them to once they're in.
   function requireAuth(fromView) {
-    setPostAuthView(fromView)
-    setView('auth')
+    setPostAuthView(fromView);
+    setView("auth");
   }
 
   // Same idea, but for "Upgrade to Pro" — after signing in, go straight to
   // Stripe checkout instead of landing on any particular page.
   function requireAuthForCheckout() {
-    setPostAuthView('analyze')
-    setPendingCheckout(true)
-    setView('auth')
+    setPostAuthView("analyze");
+    setPendingCheckout(true);
+    setView("auth");
   }
 
   function handleAuthDone() {
-    setView(postAuthView)
-    setPostAuthView('analyze')
+    setView(postAuthView);
+    setPostAuthView("analyze");
   }
 
   return (
     <div className="min-h-screen bg-manuscript bg-paper-texture flex flex-col relative isolate">
-      <Header view={view} setView={setView} onGoHome={goHome} requireAuth={requireAuth} />
+      <Header
+        view={view}
+        setView={setView}
+        onGoHome={goHome}
+        requireAuth={requireAuth}
+      />
 
       {/* Wraps the decorative wash + main content (not the header) so the oversized
           wash gets clipped to the real content height without breaking the header's
@@ -645,8 +743,10 @@ function AppShell() {
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-[900px] overflow-hidden -z-10"
           style={{
-            maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+            maskImage:
+              "linear-gradient(to bottom, black 55%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 55%, transparent 100%)",
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-forest/10 via-manuscript to-redline/10" />
@@ -658,7 +758,7 @@ function AppShell() {
         </div>
 
         {/* <main className="px-4 flex-1"> */}
-          <main className="px-4 pt-14 flex-1">
+        <main className="px-4 pt-14 flex-1">
           <BillingBanner />
           <MainContent
             view={view}
@@ -675,7 +775,7 @@ function AppShell() {
 
       <Footer setView={setView} onGoHome={goHome} />
     </div>
-  )
+  );
 }
 
 export default function App() {
@@ -683,5 +783,5 @@ export default function App() {
     <AuthProvider>
       <AppShell />
     </AuthProvider>
-  )
+  );
 }
