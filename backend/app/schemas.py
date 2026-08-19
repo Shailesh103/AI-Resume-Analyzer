@@ -267,6 +267,11 @@ class ResumeCreate(BaseModel):
     resume_data: Optional[ResumeData] = None
 
 
+class ImportResumeRequest(BaseModel):
+    analysis_id: str
+    template: str = "modern"
+
+
 class ResumeUpdate(BaseModel):
     title: Optional[str] = None
     template: Optional[str] = None

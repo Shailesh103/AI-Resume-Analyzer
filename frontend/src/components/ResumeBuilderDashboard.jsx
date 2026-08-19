@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import BuilderEditor from './BuilderEditor'
+import ResumeOnboarding from './ResumeOnboarding'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -12,75 +13,10 @@ const TEMPLATE_LABELS = {
   minimal: 'Minimal',
 }
 
-const PRO_ONLY_TEMPLATES = new Set(['professional', 'executive', 'developer'])
 const FREE_RESUME_LIMIT = 2
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-function NewResumeForm({ isPro, onCreate, onCancel }) {
-  const [title, setTitle] = useState('')
-  const [template, setTemplate] = useState('modern')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-    try {
-      await onCreate({ title: title || 'Untitled resume', template })
-    } catch (err) {
-      setError(err.message)
-      setSaving(false)
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="border border-line bg-white/50 rounded-sm p-4 mb-6 max-w-md"
-    >
-      <input
-        placeholder="Resume title (e.g. Software Engineer Resume)"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full border border-line bg-white/70 rounded-sm px-3 py-2 text-sm mb-3
-          focus:outline-none focus:ring-2 focus:ring-redline/40 focus:border-redline"
-      />
-      <select
-        value={template}
-        onChange={(e) => setTemplate(e.target.value)}
-        className="w-full border border-line bg-white/70 rounded-sm px-3 py-2 text-sm mb-3
-          focus:outline-none focus:ring-2 focus:ring-redline/40 focus:border-redline"
-      >
-        {Object.entries(TEMPLATE_LABELS).map(([value, label]) => (
-          <option key={value} value={value} disabled={!isPro && PRO_ONLY_TEMPLATES.has(value)}>
-            {label}
-            {!isPro && PRO_ONLY_TEMPLATES.has(value) ? ' (Pro)' : ''}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-xs text-redline mb-3">{error}</p>}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-ink text-manuscript text-xs uppercase tracking-widest px-4 py-2 rounded-sm disabled:opacity-50"
-        >
-          {saving ? 'Creating…' : 'Create resume'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-xs uppercase tracking-widest text-slate hover:text-redline px-4 py-2"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  )
 }
 
 function ResumeCard({ resume, onEdit, onRename, onDuplicate, onDelete }) {
@@ -164,17 +100,7 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
       .catch((e) => setError(e.message))
   }, [token])
 
-  async function createResume({ title, template }) {
-    const res = await fetch(`${API_URL}/resumes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ title, template }),
-    })
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail || 'Could not create resume')
-    }
-    const created = await res.json()
+  function handleResumeCreated(created) {
     setResumes((prev) => [
       { id: created.id, title: created.title, template: created.template, ats_score: created.ats_score, created_at: created.created_at, updated_at: created.updated_at },
       ...(prev || []),
@@ -284,7 +210,9 @@ export default function ResumeBuilderDashboard({ onBack, onRequireAuth }) {
         Build a resume section by section with a live preview, switch between 5 templates, and download a polished PDF.
       </p>
 
-      {showNewForm && <NewResumeForm isPro={isPro} onCreate={createResume} onCancel={() => setShowNewForm(false)} />}
+      {showNewForm && (
+        <ResumeOnboarding isPro={isPro} onCreated={handleResumeCreated} onCancel={() => setShowNewForm(false)} />
+      )}
 
       {error && <p className="text-sm text-redline mb-4">{error}</p>}
 

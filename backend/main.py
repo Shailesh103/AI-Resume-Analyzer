@@ -40,6 +40,7 @@ from app.entitlements import is_template_allowed, resume_limit_for
 from app.ats_check import run_ats_check
 from app.job_optimizer import optimize_for_job
 from app.pdf_generator import build_resume_pdf
+from app.resume_extractor import extract_resume_data
 from app.schemas import (
     AIAssistRequest,
     AIAssistResponse,
@@ -52,6 +53,7 @@ from app.schemas import (
     GoogleAuthRequest,
     HistoryDetail,
     HistoryItem,
+    ImportResumeRequest,
     JobCreate,
     JobOut,
     JobUpdate,
@@ -404,16 +406,12 @@ def _resume_to_out(resume: Resume) -> ResumeOut:
     )
 
 
-@app.post("/resumes", response_model=ResumeOut, status_code=201)
-def create_resume(
-    payload: ResumeCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
-):
-    if payload.template not in VALID_TEMPLATES:
-        raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
-
+def _check_can_create_resume(current_user: User, template: str, db: Session) -> bool:
+    """Raises HTTPException if this user isn't allowed to create another resume with this
+    template right now. Returns is_pro for convenience."""
     is_pro = is_pro_user(current_user)
 
-    if not is_template_allowed(payload.template, is_pro):
+    if not is_template_allowed(template, is_pro):
         raise HTTPException(status_code=403, detail="This template is Pro-only. Upgrade to unlock it.")
 
     limit = resume_limit_for(is_pro)
@@ -424,6 +422,17 @@ def create_resume(
                 status_code=403,
                 detail=f"Free plan is limited to {limit} saved resumes. Upgrade to Pro for unlimited resumes.",
             )
+    return is_pro
+
+
+@app.post("/resumes", response_model=ResumeOut, status_code=201)
+def create_resume(
+    payload: ResumeCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if payload.template not in VALID_TEMPLATES:
+        raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
+
+    _check_can_create_resume(current_user, payload.template, db)
 
     resume_data = payload.resume_data or ResumeData()
 
@@ -550,6 +559,57 @@ def duplicate_resume(
     db.commit()
     db.refresh(copy)
     return _resume_to_out(copy)
+
+
+@app.post("/resumes/import", response_model=ResumeOut, status_code=201)
+def import_resume(
+    payload: ImportResumeRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Creates a new Resume pre-filled from a resume the user already analyzed (History),
+    so choosing a template doesn't mean retyping everything from scratch."""
+    if payload.template not in VALID_TEMPLATES:
+        raise HTTPException(status_code=400, detail=f"Invalid template. Must be one of {sorted(VALID_TEMPLATES)}.")
+
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.id == payload.analysis_id, Analysis.user_id == current_user.id)
+        .first()
+    )
+    if analysis is None:
+        raise HTTPException(status_code=404, detail="Analyzed resume not found.")
+    if not analysis.resume_text:
+        raise HTTPException(status_code=400, detail="This analysis has no resume text to import from.")
+
+    _check_can_create_resume(current_user, payload.template, db)
+
+    check_ai_rate_limit(db, request, current_user.id, is_pro=is_pro_user(current_user))
+    extracted = extract_resume_data(analysis.resume_text)
+    log_ai_usage(db, request, current_user.id)
+
+    try:
+        resume_data = ResumeData(**extracted)
+    except Exception:
+        # If the model returned a shape we can't parse, fall back to a blank resume
+        # rather than failing the whole import.
+        resume_data = ResumeData()
+
+    title = (resume_data.personalInfo.professionalTitle or analysis.filename or "Imported resume").strip()
+
+    resume = Resume(
+        user_id=current_user.id,
+        title=title[:120] or "Imported resume",
+        template=payload.template,
+        resume_data=resume_data.model_dump_json(),
+        section_order=json.dumps(DEFAULT_SECTION_ORDER),
+        styling="{}",
+    )
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+    return _resume_to_out(resume)
 
 
 @app.post("/resumes/{resume_id}/generate-pdf")
