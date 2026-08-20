@@ -1,3 +1,5 @@
+import { ContactLine, ProjectLinks } from './linkUtils'
+
 const SECTION_TITLES = {
   summary: 'Executive Summary',
   experience: 'Experience',
@@ -96,7 +98,10 @@ function renderSection(key, data) {
           <Heading>{SECTION_TITLES.projects}</Heading>
           {data.projects.map((proj, i) => (
             <div key={i} className="mb-3 last:mb-0">
-              <p className="text-[13px] font-semibold text-black">{proj.name}</p>
+              <p className="text-[13px] font-semibold text-black">
+                {proj.name}
+                <ProjectLinks proj={proj} className="text-[11px] font-normal text-black/60 underline decoration-1 underline-offset-2 hover:text-redline" />
+              </p>
               {proj.description && <p className="text-[12.5px] text-black/80">{proj.description}</p>}
               {proj.bulletPoints.filter(Boolean).length > 0 && (
                 <ul className="list-disc list-outside ml-4 text-[12.5px] text-black/85 mt-1 space-y-0.5">
@@ -157,9 +162,6 @@ function renderSection(key, data) {
 
 export default function ExecutiveTemplate({ resumeData, sectionOrder }) {
   const pi = resumeData.personalInfo
-  const contactLine = [pi.email, pi.phone, pi.location, pi.website, pi.linkedin, pi.github]
-    .filter(Boolean)
-    .join('   ·   ')
 
   return (
     <div className="bg-white text-black font-body" style={{ minHeight: '297mm' }}>
@@ -173,7 +175,12 @@ export default function ExecutiveTemplate({ resumeData, sectionOrder }) {
           </p>
         )}
         <div className="w-16 h-px bg-black/40 mx-auto mt-4" />
-        {contactLine && <p className="text-[11px] text-black/50 text-center mt-4">{contactLine}</p>}
+        <ContactLine
+          pi={pi}
+          className="text-[11px] text-black/50 text-center mt-4"
+          linkClassName="text-black/50 underline decoration-1 underline-offset-2 hover:text-redline"
+          sep="   ·   "
+        />
 
         {sectionOrder.map((key) => renderSection(key, resumeData))}
 

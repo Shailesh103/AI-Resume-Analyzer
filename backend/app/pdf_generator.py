@@ -137,17 +137,32 @@ def _two_col_row(left_para, right_text, styles):
 def _contact_line(pi):
     parts = []
     if pi.get("email"):
-        parts.append(f'<link href="mailto:{_esc(pi["email"])}">{_esc(pi["email"])}</link>')
+        parts.append(f'<link href="mailto:{_esc(pi["email"])}"><u>{_esc(pi["email"])}</u></link>')
     if pi.get("phone"):
         parts.append(_esc(pi["phone"]))
     if pi.get("location"):
         parts.append(_esc(pi["location"]))
-    for field in ("website", "linkedin", "github"):
+
+    link_labels = {"website": "Portfolio", "linkedin": "LinkedIn", "github": "GitHub"}
+    for field, label in link_labels.items():
         value = pi.get(field)
         if value:
             href = value if value.startswith(("http://", "https://")) else f"https://{value}"
-            parts.append(f'<link href="{_esc(href)}">{_esc(value)}</link>')
+            parts.append(f'<link href="{_esc(href)}"><u>{label}</u></link>')
     return "   |   ".join(parts)
+
+
+def _project_links(proj):
+    """Short clickable 'Live' / 'GitHub' labels — never the raw URL, which can't
+    wrap and would otherwise overflow its column."""
+    links = []
+    if proj.get("liveUrl"):
+        href = proj["liveUrl"] if proj["liveUrl"].startswith(("http://", "https://")) else f'https://{proj["liveUrl"]}'
+        links.append(f'<link href="{_esc(href)}"><u>Live</u></link>')
+    if proj.get("githubUrl"):
+        href = proj["githubUrl"] if proj["githubUrl"].startswith(("http://", "https://")) else f'https://{proj["githubUrl"]}'
+        links.append(f'<link href="{_esc(href)}"><u>GitHub</u></link>')
+    return "  ·  ".join(links)
 
 
 def _add_experience(story, styles, style, items):
@@ -193,6 +208,9 @@ def _add_skills(story, styles, style, items):
 def _add_projects(story, styles, style, items):
     for proj in items:
         title = f'<b>{_esc(proj.get("name") or "")}</b>'
+        links = _project_links(proj)
+        if links:
+            title += f'  —  {links}'
         story.append(Paragraph(title, styles["body"]))
         if proj.get("description"):
             story.append(Paragraph(_esc(proj["description"]), styles["body"]))

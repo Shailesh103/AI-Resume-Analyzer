@@ -25,6 +25,36 @@ const PRO_ONLY_TEMPLATES = new Set(['professional', 'executive', 'developer'])
 // so it must NOT also be listed here — that was causing it to render twice.
 const FIXED_LEADING_SECTIONS = ['personalInfo']
 
+function sectionLabel(key) {
+  return SECTION_TITLES[key] || (key === 'personalInfo' ? 'Personal Info' : 'Custom Sections')
+}
+
+function SectionIcon({ section, className }) {
+  const common = { className, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }
+  switch (section) {
+    case 'personalInfo':
+      return <svg {...common}><circle cx="10" cy="7" r="3" /><path d="M4 17c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /></svg>
+    case 'summary':
+      return <svg {...common}><rect x="4" y="3" width="12" height="14" rx="1.2" /><path d="M7 7.5h6M7 10.5h6M7 13.5h3.5" /></svg>
+    case 'experience':
+      return <svg {...common}><rect x="3" y="6.5" width="14" height="9.5" rx="1.2" /><path d="M7 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 5v1.5M3 10.5h14" /></svg>
+    case 'education':
+      return <svg {...common}><path d="M2.5 7 10 4l7.5 3-7.5 3-7.5-3Z" /><path d="M5.5 8.6v3.4c0 1.1 2 2 4.5 2s4.5-.9 4.5-2V8.6" /></svg>
+    case 'skills':
+      return <svg {...common}><path d="M10 3.5 11.6 7l3.9.5-2.8 2.7.7 3.8L10 12.2l-3.4 1.8.7-3.8-2.8-2.7L8.4 7 10 3.5Z" /></svg>
+    case 'projects':
+      return <svg {...common}><path d="M3 6.5a1 1 0 0 1 1-1h3.5l1.3 1.7H16a1 1 0 0 1 1 1v6.3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6.5Z" /></svg>
+    case 'certifications':
+      return <svg {...common}><circle cx="10" cy="8" r="4.2" /><path d="M7.5 11.5 6.5 17l3.5-1.8 3.5 1.8-1-5.5" /></svg>
+    case 'achievements':
+      return <svg {...common}><path d="M6 3.5h8v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4v-3Z" /><path d="M6 4.5H4a1 1 0 0 0-1 1.2c.3 1.5 1.3 2.6 3 2.9M14 4.5h2a1 1 0 0 1 1 1.2c-.3 1.5-1.3 2.6-3 2.9M10 10.5v3M7.5 16.5h5l-.5-2h-4l-.5 2Z" /></svg>
+    case 'languages':
+      return <svg {...common}><circle cx="10" cy="10" r="7" /><path d="M3 10h14M10 3c1.8 2 2.8 4.5 2.8 7s-1 5-2.8 7c-1.8-2-2.8-4.5-2.8-7s1-5 2.8-7Z" /></svg>
+    default:
+      return <svg {...common}><rect x="3.5" y="3.5" width="13" height="13" rx="1.5" /><path d="M10 6.5v7M6.5 10h7" /></svg>
+  }
+}
+
 function SectionForm({ activeKey, resumeData, setField }) {
   switch (activeKey) {
     case 'personalInfo':
@@ -50,6 +80,45 @@ function SectionForm({ activeKey, resumeData, setField }) {
     default:
       return null
   }
+}
+
+/** One collapsed/expandable card in the accordion — FlowCV-style. */
+function AccordionCard({ sectionKey, isOpen, onToggle, isReorderable, onMoveUp, onMoveDown, children }) {
+  return (
+    <div
+      className={`bg-white/60 border rounded-lg overflow-hidden transition-colors ${
+        isOpen ? 'border-redline/50' : 'border-line'
+      }`}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+      >
+        <span className={`shrink-0 ${isOpen ? 'text-redline' : 'text-slate'}`}>
+          <SectionIcon section={sectionKey} className="w-5 h-5" />
+        </span>
+        <span className={`flex-1 font-display text-[15px] ${isOpen ? 'text-ink' : 'text-ink/80'}`}>
+          {sectionLabel(sectionKey)}
+        </span>
+        {isReorderable && isOpen && (
+          <span className="flex items-center gap-2 text-[10px] text-slate mr-1" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onMoveUp} className="hover:text-redline px-1">▲</button>
+            <button onClick={onMoveDown} className="hover:text-redline px-1">▼</button>
+          </span>
+        )}
+        <svg
+          viewBox="0 0 20 20"
+          className={`w-4 h-4 text-slate shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        >
+          <path d="M5.5 8 10 12.5 14.5 8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {isOpen && <div className="px-4 pb-5 pt-1 border-t border-line/70">{children}</div>}
+    </div>
+  )
 }
 
 export default function BuilderEditor({ resumeId, onBack }) {
@@ -181,7 +250,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
   return (
     <div className="max-w-6xl mx-auto pb-16">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+      <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <button onClick={onBack} className="text-sm text-slate hover:text-redline underline underline-offset-4 shrink-0">
             Back
@@ -208,7 +277,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
       </div>
 
       {/* Template selector */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-1 border-b border-line">
+      <div className="bg-white/50 border border-line rounded-lg p-2 flex items-center gap-2 overflow-x-auto mb-2">
         {TEMPLATE_LIST.map((t) => {
           const locked = !isPro && PRO_ONLY_TEMPLATES.has(t.key)
           const disabled = !t.available || locked
@@ -224,12 +293,12 @@ export default function BuilderEditor({ resumeId, onBack }) {
                     ? `${t.description} (Pro only)`
                     : t.description
               }
-              className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
+              className={`shrink-0 text-xs uppercase tracking-widest px-3 py-1.5 rounded-md border transition-colors ${
                 disabled
-                  ? 'border-line text-slate/40 cursor-not-allowed'
+                  ? 'border-transparent text-slate/40 cursor-not-allowed'
                   : template === t.key
                     ? 'border-redline bg-redline text-manuscript'
-                    : 'border-line text-slate hover:text-redline hover:border-redline/40'
+                    : 'border-transparent text-slate hover:text-redline hover:bg-white/70'
               }`}
             >
               {t.label}
@@ -240,43 +309,28 @@ export default function BuilderEditor({ resumeId, onBack }) {
         })}
       </div>
       {!isPro && (
-        <p className="text-[11px] text-slate mb-5">
+        <p className="text-[11px] text-slate mb-6">
           🔒 Professional, Executive, and Developer are Pro templates — upgrade to unlock every template.
         </p>
       )}
 
-      {/* Desktop: sidebar + form + live preview, all visible at once */}
-      <div className="hidden lg:grid lg:grid-cols-[180px_1fr_380px] gap-6 items-start">
-        <div className="flex flex-col gap-1">
-          {navSections.map((key) => {
-            const isReorderable = sectionOrder.includes(key)
-            return (
-              <div key={key} className="flex items-center gap-1">
-                <button
-                  onClick={() => setActiveKey(key)}
-                  className={`text-left text-xs uppercase tracking-widest px-2 py-1.5 rounded-sm flex-1 whitespace-nowrap ${
-                    activeKey === key ? 'bg-ink text-manuscript' : 'text-slate hover:text-redline'
-                  }`}
-                >
-                  {SECTION_TITLES[key] || (key === 'personalInfo' ? 'Personal Info' : 'Custom Sections')}
-                </button>
-                {isReorderable && activeKey === key && (
-                  <span className="flex flex-col text-[10px] text-slate">
-                    <button onClick={() => moveSection(key, -1)} className="hover:text-redline leading-none">
-                      ▲
-                    </button>
-                    <button onClick={() => moveSection(key, 1)} className="hover:text-redline leading-none">
-                      ▼
-                    </button>
-                  </span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        <div>
-          <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
+      {/* Desktop: accordion cards + sticky live preview, FlowCV-style */}
+      <div className="hidden lg:grid lg:grid-cols-[420px_1fr] gap-6 items-start">
+        
+        <div className="space-y-2.5">
+          {navSections.map((key) => (
+            <AccordionCard
+              key={key}
+              sectionKey={key}
+              isOpen={activeKey === key}
+              onToggle={() => setActiveKey(activeKey === key ? null : key)}
+              isReorderable={sectionOrder.includes(key)}
+              onMoveUp={() => moveSection(key, -1)}
+              onMoveDown={() => moveSection(key, 1)}
+            >
+              <SectionForm activeKey={key} resumeData={resumeData} setField={setField} />
+            </AccordionCard>
+          ))}
         </div>
 
         <div className="sticky top-24">
@@ -289,11 +343,7 @@ export default function BuilderEditor({ resumeId, onBack }) {
       <div className="lg:hidden">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs uppercase tracking-widest text-slate">
-            {showPreview
-              ? 'Preview'
-              : `Step ${stepIndex + 1} of ${navSections.length} · ${
-                  SECTION_TITLES[activeKey] || (activeKey === 'personalInfo' ? 'Personal Info' : 'Custom Sections')
-                }`}
+            {showPreview ? 'Preview' : `Step ${stepIndex + 1} of ${navSections.length} · ${sectionLabel(activeKey)}`}
           </p>
           <button onClick={() => setShowPreview((v) => !v)} className="text-xs uppercase tracking-widest text-redline hover:underline">
             {showPreview ? 'Back to editing' : 'Preview'}
@@ -316,9 +366,15 @@ export default function BuilderEditor({ resumeId, onBack }) {
           </>
         ) : (
           <>
-            <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
+            <div className="bg-white/60 border border-line rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-4 text-ink">
+                <SectionIcon section={activeKey} className="w-5 h-5 text-redline" />
+                <span className="font-display text-[15px]">{sectionLabel(activeKey)}</span>
+              </div>
+              <SectionForm activeKey={activeKey} resumeData={resumeData} setField={setField} />
+            </div>
 
-            <div className="flex items-center justify-between mt-8 pt-4 border-t border-line">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-line">
               <button
                 onClick={() => goStep(-1)}
                 disabled={stepIndex <= 0}

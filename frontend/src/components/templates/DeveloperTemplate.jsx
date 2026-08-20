@@ -1,3 +1,5 @@
+import { ensureHref, ProjectLinks } from './linkUtils'
+
 const SECTION_TITLES = {
   summary: 'Summary',
   experience: 'Experience',
@@ -110,12 +112,7 @@ function renderSection(key, data) {
             <div key={i} className="mb-3 last:mb-0">
               <p className="text-[13px] font-semibold text-black font-mono">
                 {proj.name}
-                {(proj.githubUrl || proj.liveUrl) && (
-                  <span className="text-[11px] font-sans font-normal text-black/50">
-                    {' '}
-                    — {proj.githubUrl || proj.liveUrl}
-                  </span>
-                )}
+                <ProjectLinks proj={proj} className="text-[11px] font-sans font-normal text-black/50 underline decoration-1 underline-offset-2 hover:text-redline" />
               </p>
               {proj.description && <p className="text-[12px] text-black/80 mt-0.5">{proj.description}</p>}
               {proj.bulletPoints.filter(Boolean).length > 0 && (
@@ -184,7 +181,11 @@ function renderSection(key, data) {
 
 export default function DeveloperTemplate({ resumeData, sectionOrder }) {
   const pi = resumeData.personalInfo
-  const links = [pi.website, pi.linkedin, pi.github].filter(Boolean)
+  const linkFields = [
+    pi.website && { href: ensureHref(pi.website), label: 'Portfolio' },
+    pi.linkedin && { href: ensureHref(pi.linkedin), label: 'LinkedIn' },
+    pi.github && { href: ensureHref(pi.github), label: 'GitHub' },
+  ].filter(Boolean)
   const contactLine = [pi.email, pi.phone, pi.location].filter(Boolean).join('  ·  ')
 
   return (
@@ -193,12 +194,18 @@ export default function DeveloperTemplate({ resumeData, sectionOrder }) {
         <h1 className="text-[26px] font-bold font-mono tracking-tight text-black">{pi.fullName || 'Your Name'}</h1>
         {pi.professionalTitle && <p className="text-[13px] text-black/70 mt-0.5">{pi.professionalTitle}</p>}
         {contactLine && <p className="text-[11px] text-black/50 mt-2">{contactLine}</p>}
-        {links.length > 0 && (
+        {linkFields.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-1.5">
-            {links.map((l, i) => (
-              <span key={i} className="text-[11px] font-mono bg-black/5 border border-black/10 rounded px-1.5 py-0.5 text-black/80">
-                {l}
-              </span>
+            {linkFields.map((l, i) => (
+              <a
+                key={i}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono bg-black/5 border border-black/10 rounded px-1.5 py-0.5 text-black/80 hover:text-redline hover:border-redline/40"
+              >
+                {l.label}
+              </a>
             ))}
           </div>
         )}

@@ -1,3 +1,5 @@
+import { ContactLine, ProjectLinks } from './linkUtils'
+
 const SECTION_TITLES = {
   summary: 'Summary',
   experience: 'Experience',
@@ -97,9 +99,7 @@ function renderSection(key, data) {
             <div key={i} className="mb-2.5 last:mb-0">
               <p className="text-[13px] font-semibold text-black">
                 {proj.name}
-                {(proj.liveUrl || proj.githubUrl) && (
-                  <span className="text-[11px] font-normal text-black/60"> — {proj.liveUrl || proj.githubUrl}</span>
-                )}
+                <ProjectLinks proj={proj} className="text-[11px] font-normal text-black/60 underline decoration-1 underline-offset-2 hover:text-redline" />
               </p>
               {proj.description && <p className="text-[12px] text-black/80">{proj.description}</p>}
               {proj.bulletPoints.filter(Boolean).length > 0 && (
@@ -169,16 +169,17 @@ function renderSection(key, data) {
  */
 export default function ModernATSTemplate({ resumeData, sectionOrder }) {
   const pi = resumeData.personalInfo
-  const contactLine = [pi.email, pi.phone, pi.location, pi.website, pi.linkedin, pi.github]
-    .filter(Boolean)
-    .join('   |   ')
 
   return (
     <div className="bg-white text-black font-body" style={{ minHeight: '297mm' }}>
       <div className="px-10 py-10 sm:px-14 sm:py-12">
         <h1 className="text-[26px] font-semibold tracking-tight text-black">{pi.fullName || 'Your Name'}</h1>
         {pi.professionalTitle && <p className="text-[14px] text-black/70 mt-0.5">{pi.professionalTitle}</p>}
-        {contactLine && <p className="text-[11px] text-black/60 mt-2">{contactLine}</p>}
+        <ContactLine
+          pi={pi}
+          className="text-[11px] text-black/60 mt-2"
+          linkClassName="text-black/60 underline decoration-1 underline-offset-2 hover:text-redline"
+        />
 
         <div className="mt-1">
           {sectionOrder.map((key) => renderSection(key, resumeData))}

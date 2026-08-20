@@ -1,3 +1,5 @@
+import { ContactLine, ProjectLinks } from './linkUtils'
+
 const SECTION_TITLES = {
   summary: 'Summary',
   experience: 'Professional Experience',
@@ -92,7 +94,10 @@ function renderSection(key, data) {
           <Heading>{SECTION_TITLES.projects}</Heading>
           {data.projects.map((proj, i) => (
             <div key={i} className="mb-2.5 last:mb-0">
-              <p className="text-[13px] font-bold text-black">{proj.name}</p>
+              <p className="text-[13px] font-bold text-black">
+                {proj.name}
+                <ProjectLinks proj={proj} className="text-[11px] font-normal text-black/60 underline decoration-1 underline-offset-2 hover:text-redline" />
+              </p>
               {proj.description && <p className="text-[12px] text-black/80">{proj.description}</p>}
               {proj.bulletPoints.filter(Boolean).length > 0 && (
                 <ul className="list-disc list-outside ml-4 text-[12px] text-black/85 mt-1 space-y-0.5">
@@ -156,9 +161,6 @@ function renderSection(key, data) {
 
 export default function ProfessionalTemplate({ resumeData, sectionOrder }) {
   const pi = resumeData.personalInfo
-  const contactLine = [pi.email, pi.phone, pi.location, pi.website, pi.linkedin, pi.github]
-    .filter(Boolean)
-    .join('  |  ')
 
   return (
     <div className="bg-white text-black font-body" style={{ minHeight: '297mm' }}>
@@ -168,7 +170,12 @@ export default function ProfessionalTemplate({ resumeData, sectionOrder }) {
           {pi.professionalTitle && (
             <p className="text-[13px] font-semibold text-black/70 mt-1">{pi.professionalTitle}</p>
           )}
-          {contactLine && <p className="text-[11px] text-black/60 mt-2">{contactLine}</p>}
+          <ContactLine
+            pi={pi}
+            className="text-[11px] text-black/60 mt-2"
+            linkClassName="text-black/60 underline decoration-1 underline-offset-2 hover:text-redline"
+            sep="  |  "
+          />
         </div>
 
         {sectionOrder.map((key) => renderSection(key, resumeData))}

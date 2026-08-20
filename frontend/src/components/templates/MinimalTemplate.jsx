@@ -1,3 +1,5 @@
+import { ContactLine, ProjectLinks } from './linkUtils'
+
 const SECTION_TITLES = {
   summary: 'Summary',
   experience: 'Experience',
@@ -92,7 +94,10 @@ function renderSection(key, data) {
           <Heading>{SECTION_TITLES.projects}</Heading>
           {data.projects.map((proj, i) => (
             <div key={i} className="mb-3 last:mb-0">
-              <p className="text-[13px] text-black">{proj.name}</p>
+              <p className="text-[13px] text-black">
+                {proj.name}
+                <ProjectLinks proj={proj} className="text-[11px] font-light text-black/40 underline decoration-1 underline-offset-2 hover:text-redline" />
+              </p>
               {proj.description && <p className="text-[12.5px] text-black/70 font-light">{proj.description}</p>}
               {proj.technologies.filter(Boolean).length > 0 && (
                 <p className="text-[11px] text-black/40 mt-0.5">{proj.technologies.filter(Boolean).join(', ')}</p>
@@ -149,16 +154,18 @@ function renderSection(key, data) {
 
 export default function MinimalTemplate({ resumeData, sectionOrder }) {
   const pi = resumeData.personalInfo
-  const contactLine = [pi.email, pi.phone, pi.location, pi.website, pi.linkedin, pi.github]
-    .filter(Boolean)
-    .join('   ')
 
   return (
     <div className="bg-white text-black font-body" style={{ minHeight: '297mm' }}>
       <div className="px-12 py-14 sm:px-16 sm:py-16">
         <h1 className="text-[24px] font-normal text-black">{pi.fullName || 'Your Name'}</h1>
         {pi.professionalTitle && <p className="text-[13px] text-black/50 font-light mt-1">{pi.professionalTitle}</p>}
-        {contactLine && <p className="text-[11px] text-black/40 font-light mt-3">{contactLine}</p>}
+        <ContactLine
+          pi={pi}
+          className="text-[11px] text-black/40 font-light mt-3"
+          linkClassName="text-black/40 underline decoration-1 underline-offset-2 hover:text-redline"
+          sep="   "
+        />
 
         {sectionOrder.map((key) => renderSection(key, resumeData))}
 
