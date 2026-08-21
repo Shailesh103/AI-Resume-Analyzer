@@ -15,6 +15,7 @@ without embedding fonts), but each template still gets a distinct look
 via TEMPLATE_STYLES below.
 """
 import io
+import os
 from xml.sax.saxutils import escape as _esc
 
 from reportlab.lib.colors import HexColor
@@ -22,7 +23,28 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import HRFlowable, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+# ReportLab's built-in base-14 fonts (Helvetica, Times, Courier) don't carry
+# a ToUnicode CMap that maps the bullet glyph (U+2022) back to a real
+# character — pdfminer-based text extractors (which many real ATS parsers
+# are built on) read it back as the literal glyph id "(cid:127)" instead of
+# "•". Embedding a real TTF (DejaVu Sans, bundled in app/fonts/ — free,
+# redistributable license) *just* for the bullet glyph fixes that: the rest
+# of each line still renders in the template's normal font, only the bullet
+# character itself borrows this font's proper Unicode mapping. Falls back to
+# a plain hyphen if the font file is ever missing (e.g. not deployed
+# alongside the code), so a bad font path degrades gracefully instead of
+# crashing PDF generation.
+_BULLET_FONT_NAME = "DejaVuSans"
+_BULLET_FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "DejaVuSans.ttf")
+try:
+    pdfmetrics.registerFont(TTFont(_BULLET_FONT_NAME, _BULLET_FONT_PATH))
+    _BULLET_GLYPH = f'<font name="{_BULLET_FONT_NAME}">\u2022</font>'
+except Exception:
+    _BULLET_GLYPH = "-"
 
 PAGE_MARGIN = 12 * mm
 # ReportLab's SimpleDocTemplate always builds its Frame as
@@ -211,8 +233,9 @@ def _job_header(styles, title, org=None, location=None, date_range=None, extra=N
 
 
 def _bullet_line(styles, text):
-    """A single '• ...' bullet — the only place bullet markup is written."""
-    return Paragraph(f"• {_esc(text)}", styles["bullet"])
+    """A single '• ...' bullet, rendered ATS-safe via _BULLET_GLYPH (see the
+    font registration above) instead of a raw '•' character."""
+    return Paragraph(f"{_BULLET_GLYPH} {_esc(text)}", styles["bullet"])
 
 
 def _skill_line(styles, category, skills):
@@ -244,7 +267,7 @@ def _contact_line(pi):
         value = pi.get(field)
         if value:
             parts.append(_link(_normalize_url(value), label))
-    return "   |   ".join(parts)
+    return " | ".join(parts)
 
 
 def _project_links(proj):
