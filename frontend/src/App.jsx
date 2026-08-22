@@ -11,6 +11,7 @@ import JobTracker from "./components/JobTracker";
 import LandingSections from "./components/LandingSections";
 import Footer from "./components/Footer";
 import { PrivacyPolicy, TermsOfService } from "./components/LegalPages";
+import AnalysisLoadingPage from "./components/analysis/AnalysisLoadingPage";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -456,6 +457,16 @@ function MainContent({
   const [error, setError] = useState(null);
   const [usage, setUsage] = useState(null);
 
+  // Drives the full-screen cinematic analysis overlay: shown from the moment
+  // "Analyze resume" is clicked until its own success animation finishes (or
+  // until the user backs out of an error). `attemptId` is bumped on every
+  // analyze/retry call and passed to AnalysisLoadingPage as a `key`, so each
+  // attempt gets a fully-reset progress simulation instead of reusing stale
+  // internal state from a previous run.
+  const [showAnalysisScreen, setShowAnalysisScreen] = useState(false);
+  const [attemptId, setAttemptId] = useState(0);
+  const lastAnalyzeArgsRef = useRef(null);
+
   // The header logo can be clicked from any nested state (results shown, editor
   // open, etc.) — this always forces a full reset back to the true landing page.
   useEffect(() => {
@@ -481,6 +492,9 @@ function MainContent({
   }, [refreshUsage]);
 
   async function handleAnalyze(file, jobDescription) {
+    lastAnalyzeArgsRef.current = { file, jobDescription };
+    setShowAnalysisScreen(true);
+    setAttemptId((n) => n + 1);
     setLoading(true);
     setError(null);
 
@@ -515,6 +529,11 @@ function MainContent({
     }
   }
 
+  function handleAnalysisRetry() {
+    const args = lastAnalyzeArgsRef.current;
+    if (args) handleAnalyze(args.file, args.jobDescription);
+  }
+
   async function handleUpgrade() {
     if (!token) {
       requireAuthForCheckout();
@@ -547,6 +566,24 @@ function MainContent({
 
   if (view === "auth") {
     return <AuthForm onDone={onAuthDone} />;
+  }
+
+  // The cinematic full-screen analysis experience takes over the whole
+  // viewport (it's `fixed inset-0`) regardless of which view is technically
+  // active underneath, since analysis is only ever started from the landing
+  // page and the view never changes while it's running.
+  if (showAnalysisScreen) {
+    return (
+      <AnalysisLoadingPage
+        key={attemptId}
+        isDone={!loading && !!result}
+        isError={!loading && !!error}
+        errorMessage={error}
+        onFinished={() => setShowAnalysisScreen(false)}
+        onRetry={handleAnalysisRetry}
+        onCancel={() => setShowAnalysisScreen(false)}
+      />
+    );
   }
 
   if (view === "history") {
