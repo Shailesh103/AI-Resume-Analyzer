@@ -481,3 +481,78 @@ def build_resume_pdf(resume_data: dict, section_order: list, template: str) -> b
 
     doc.build(story)
     return buffer.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Plain-text resume -> PDF (for ResumeEditor's "Export as PDF"). This mirrors
+# app/exporter.py's build_resume_docx() heuristics line-for-line (name /
+# section-header / bullet detection) so the .docx and .pdf exports of the
+# same edited text look like siblings, not two different products. Kept in
+# this module (rather than exporter.py) so it can reuse PAGE_MARGIN,
+# CONTENT_WIDTH, and the ATS-safe _BULLET_GLYPH already set up above.
+# ---------------------------------------------------------------------------
+import re as _re
+
+_TEXT_HEADER_RE = _re.compile(r"^[A-Z][A-Z0-9 &/\-]{2,40}$")
+# Matches a leading bullet marker of *any* kind — a real "•", a hyphen,
+# an asterisk, or the private-use/garbled glyph that PDF text-extraction
+# libraries (pdfplumber included) sometimes produce in place of a bullet
+# character that a font didn't map to Unicode correctly. Normalizing this
+# away (rather than only matching "•"/"-"/"*") is what makes the plain-text
+# export robust to resumes that were themselves exported from a PDF with
+# that exact bullet-encoding problem.
+_TEXT_BULLET_RE = _re.compile(r"^[\s\-*\u2022\u25CF\u25AA\uF000-\uFFFF\uE000-\uF8FF]*[\-*\u2022\u25CF\u25AA]\s*(.*)")
+
+
+def build_plain_text_resume_pdf(resume_text: str) -> bytes:
+    """Render a plain resume_text blob (as edited in ResumeEditor) to a
+    single-column, ATS-safe PDF — same heuristics as build_resume_docx()."""
+    styles = {
+        "name": ParagraphStyle("PName", fontName="Helvetica-Bold", fontSize=18,
+                                leading=21, alignment=TA_CENTER, spaceAfter=8),
+        "heading": ParagraphStyle("PHeading", fontName="Helvetica-Bold", fontSize=12,
+                                   leading=14, spaceBefore=10, spaceAfter=4,
+                                   textColor=HexColor("#000000")),
+        "body": ParagraphStyle("PBody", fontName="Helvetica", fontSize=10.5,
+                                leading=13.5, spaceAfter=4, textColor=HexColor("#1a1a1a")),
+        "bullet": ParagraphStyle("PBullet", fontName="Helvetica", fontSize=10.5,
+                                  leading=13.5, leftIndent=20, firstLineIndent=-10, spaceAfter=3),
+    }
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=PAGE_MARGIN, rightMargin=PAGE_MARGIN,
+        topMargin=PAGE_MARGIN, bottomMargin=PAGE_MARGIN,
+        title="Resume",
+    )
+
+    story = []
+    first_content_line_used = False
+
+    for raw_line in (resume_text or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue  # collapse blank lines, same as the docx builder
+
+        if not first_content_line_used:
+            story.append(Paragraph(_esc(line), styles["name"]))
+            first_content_line_used = True
+            continue
+
+        bullet_match = _TEXT_BULLET_RE.match(line)
+        if bullet_match:
+            content = bullet_match.group(1) or line
+            story.append(Paragraph(f"{_BULLET_GLYPH} {_esc(content)}", styles["bullet"]))
+            continue
+
+        if _TEXT_HEADER_RE.match(line) and len(line.split()) <= 5:
+            p = Paragraph(_esc(line.upper()), styles["heading"])
+            story.append(p)
+            story.append(HRFlowable(width="100%", thickness=0.75, color=HexColor("#000000"), spaceAfter=2))
+            continue
+
+        story.append(Paragraph(_esc(line), styles["body"]))
+
+    doc.build(story)
+    return buffer.getvalue()

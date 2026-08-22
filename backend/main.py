@@ -24,6 +24,7 @@ from app.auth import (
 )
 from app.database import get_db, init_db
 from app.exporter import build_resume_docx
+from app.pdf_generator import build_plain_text_resume_pdf
 from app.billing import (
     construct_webhook_event,
     create_checkout_session,
@@ -235,6 +236,16 @@ def export_docx(payload: ExportRequest):
         iter([docx_bytes]),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": 'attachment; filename="resume.docx"'},
+    )
+
+
+@app.post("/export/pdf")
+def export_pdf(payload: ExportRequest):
+    pdf_bytes = build_plain_text_resume_pdf(payload.resume_text)
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
     )
 
 
